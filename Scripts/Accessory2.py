@@ -1,6 +1,6 @@
 """
 Calculation of metrics including accuracy, AUROC, and PRC, outputing CAM of tiles, and output
-last layer activation for tSNE 2.0
+last layer activation for tSNE 2.0 (May need modification for GBM)
 
 Created on 04/26/2019
 

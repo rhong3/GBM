@@ -1,5 +1,5 @@
 """
-Prepare training and testing datasets as CSV dictionaries 2.0
+Prepare training and testing datasets as CSV dictionaries 2.0 (Further modification required for GBM)
 
 Created on 04/26/2019
 
@@ -72,10 +72,7 @@ def paired_tile_ids_in(slide, label, root_dir):
     dirb = os.path.isdir(root_dir + 'level1')
     dirc = os.path.isdir(root_dir + 'level2')
     if dira and dirb and dirc:
-        if "TCGA" in root_dir:
-            fac = 1000
-        else:
-            fac = 500
+        fac = 500
         ids = []
         for level in range(3):
             dirr = root_dir + 'level{}'.format(str(level))
@@ -111,25 +108,6 @@ def paired_tile_ids_in(slide, label, root_dir):
         idsa = pd.DataFrame(columns=['slide', 'label', 'L0path', 'L1path', 'L2path'])
 
     return idsa
-
-
-# Balance CPTAC and TCGA tiles in each class
-def balance(pdls, cls):
-    balanced = pd.DataFrame(columns=['slide', 'label', 'L0path', 'L1path', 'L2path'])
-    for i in range(cls):
-        ref = pdls.loc[pdls['label'] == i]
-        CPTAC = ref[~ref['slide'].str.contains("TCGA")]
-        TCGA = ref[ref['slide'].str.contains("TCGA")]
-        if CPTAC.shape[0] != 0 and TCGA.shape[0] != 0:
-            ratio = (CPTAC.shape[0])/(TCGA.shape[0])
-            if ratio < 0.2:
-                TCGA = TCGA.sample(int(5*CPTAC.shape[0]), replace=False)
-                ref = pd.concat([TCGA, CPTAC], sort=False)
-            elif ratio > 5:
-                CPTAC = CPTAC.sample(int(5*TCGA.shape[0]), replace=False)
-                ref = pd.concat([TCGA, CPTAC], sort=False)
-        balanced = pd.concat([balanced, ref], sort=False)
-    return balanced
 
 
 # Get all svs images with its label as one file; level is the tile resolution level
@@ -243,7 +221,6 @@ def set_sep(alll, path, cls, cut=0.2, batchsize=24):
         tile_ids = paired_tile_ids_in(row['slide'], row['label'], row['path'])
         validation_tiles = pd.concat([validation_tiles, tile_ids])
 
-    train_tiles = balance(train_tiles, cls=cls)
     # No shuffle on test set
     train_tiles = sku.shuffle(train_tiles)
     validation_tiles = sku.shuffle(validation_tiles)

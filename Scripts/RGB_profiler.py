@@ -1,5 +1,5 @@
 """
-Check RGB info for tiles
+Check RGB info for tiles (need modification to GBM)
 
 Created on 03/26/2019
 
@@ -33,7 +33,7 @@ def load_image(addr):
     return img
 
 
-# loading images for dictionaries and generate tfrecords
+# loading images
 def loader(totlist_dir):
     RGB=[]
     all = pd.read_csv(totlist_dir+'/All_images.csv', header=0)

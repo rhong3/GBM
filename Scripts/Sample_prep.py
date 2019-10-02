@@ -1,5 +1,5 @@
 """
-Prepare training and testing datasets as CSV dictionaries
+Prepare training and testing datasets as CSV dictionaries (Further modification required for GBM)
 
 Created on 11/26/2018
 
@@ -42,25 +42,6 @@ def tile_ids_in(slide, level, root_dir, label):
         print('Ignore:', root_dir)
 
     return ids
-
-
-# Balance CPTAC and TCGA tiles in each class
-def balance(pdls, cls):
-    balanced = pd.DataFrame(columns=['slide', 'level', 'path', 'label'])
-    for i in range(cls):
-        ref = pdls.loc[pdls['label'] == i]
-        CPTAC = ref[~ref['slide'].str.contains("TCGA")]
-        TCGA = ref[ref['slide'].str.contains("TCGA")]
-        if CPTAC.shape[0] != 0 and TCGA.shape[0] != 0:
-            ratio = (CPTAC.shape[0])/(TCGA.shape[0])
-            if ratio < 0.2:
-                TCGA = TCGA.sample(int(5*CPTAC.shape[0]), replace=False)
-                ref = pd.concat([TCGA, CPTAC], sort=False)
-            elif ratio > 5:
-                CPTAC = CPTAC.sample(int(5*TCGA.shape[0]), replace=False)
-                ref = pd.concat([TCGA, CPTAC], sort=False)
-        balanced = pd.concat([balanced, ref], sort=False)
-    return balanced
 
 
 # Get all svs images with its label as one file; level is the tile resolution level
@@ -140,19 +121,8 @@ def set_sep(alll, path, cls, level=None, cut=0.2, batchsize=64):
     if level:
         alll = alll[alll.level == level]
 
-    TCGA = alll[alll['slide'].str.contains("TCGA")]
-    CPTAC = alll[~alll['slide'].str.contains("TCGA")]
+    CPTAC = alll
     for i in range(cls):
-        subset = TCGA.loc[TCGA['label'] == i]
-        unq = list(subset.slide.unique())
-        np.random.shuffle(unq)
-        validation = unq[:int(len(unq) * cut / 2)]
-        valist.append(subset[subset['slide'].isin(validation)])
-        test = unq[int(len(unq) * cut / 2):int(len(unq) * cut)]
-        telist.append(subset[subset['slide'].isin(test)])
-        train = unq[int(len(unq) * cut):]
-        trlist.append(subset[subset['slide'].isin(train)])
-
         subset = CPTAC.loc[CPTAC['label'] == i]
         unq = list(subset.slide.unique())
         np.random.shuffle(unq)
@@ -182,7 +152,6 @@ def set_sep(alll, path, cls, level=None, cut=0.2, batchsize=64):
     train_tiles = pd.DataFrame(train_tiles_list, columns=['slide', 'level', 'path', 'label'])
     validation_tiles = pd.DataFrame(validation_tiles_list, columns=['slide', 'level', 'path', 'label'])
 
-    train_tiles = balance(train_tiles, cls=cls)
     # No shuffle on test set
     train_tiles = sku.shuffle(train_tiles)
     validation_tiles = sku.shuffle(validation_tiles)
