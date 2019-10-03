@@ -66,7 +66,7 @@ def cut():
             try:
                 os.mkdir(otdir)
             except(FileExistsError):
-                continue
+                pass
             try:
                 n_x, n_y, raw_img, resx, resy, ct = Slicer.tile(image_file=i[0], outdir=otdir,
                                                                 level=level, std_img=std, dp=i[2], ft=tff)
