@@ -36,8 +36,6 @@ def tile_ids_in(slide, level, root_dir, label, sldnum):
         for id in os.listdir(root_dir):
             if '_{}.png'.format(str(sldnum)) in id:
                 ids.append([slide, level, root_dir+'/'+id, label])
-            else:
-                print('Skipping ID:', id)
     except FileNotFoundError:
         print('Ignore:', root_dir)
 

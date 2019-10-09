@@ -50,8 +50,7 @@ def paired_tile_ids_in(slide, label, root_dir, sldnum):
                     except IndexError:
                         dup = np.nan
                     ids.append([slide, label, level, dirr + '/' + id, x, y, dup])
-                else:
-                    print('Skipping ID:', id)
+
         ids = pd.DataFrame(ids, columns=['slide', 'label', 'level', 'path', 'x', 'y', 'dup'])
         idsa = ids.loc[ids['level'] == 0]
         idsa = idsa.drop(columns=['level'])
