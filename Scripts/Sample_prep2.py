@@ -31,43 +31,8 @@ def intersection(lst1, lst2):
     return lst3
 
 
-def tile_ids_in(slide, label, root_dir):
-    dira = os.path.isdir(root_dir + 'level0')
-    dirb = os.path.isdir(root_dir + 'level1')
-    dirc = os.path.isdir(root_dir + 'level2')
-    if dira and dirb and dirc:
-        ids = []
-        for level in range(3):
-            dirr = root_dir + 'level{}'.format(str(level))
-            for id in os.listdir(dirr):
-                if '.png' in id:
-                    ids.append([slide, label, level, dirr + '/' + id])
-                else:
-                    print('Skipping ID:', id)
-        ids = pd.DataFrame(ids, columns=['slide', 'label', 'level', 'path'])
-        idsa = ids.loc[ids['level'] == 0]
-        idsb = ids.loc[ids['level'] == 1]
-        idsc = ids.loc[ids['level'] == 2]
-        idss = pd.DataFrame(columns=['slide', 'label', 'L0path', 'L1path', 'L2path'])
-        idss['slide'] = idsa['slide']
-        idss['label'] = idsa['label']
-        idss['L0path'] = idsa['path']
-        idss = idss.reset_index(drop=True)
-        idsb = idsb.reset_index(drop=True)
-        idsc = idsc.reset_index(drop=True)
-        idss['L1path'] = idsb['path']
-        idss['L2path'] = idsc['path']
-        idss = sku.shuffle(idss)
-        idss = idss.fillna(method='ffill')
-        idss = idss.fillna(method='bfill')
-    else:
-        idss = pd.DataFrame(columns=['slide', 'label', 'L0path', 'L1path', 'L2path'])
-
-    return idss
-
-
 # pair tiles of 20x, 10x, 5x of the same area
-def paired_tile_ids_in(slide, label, root_dir):
+def paired_tile_ids_in(slide, label, root_dir, sldnum):
     dira = os.path.isdir(root_dir + 'level0')
     dirb = os.path.isdir(root_dir + 'level1')
     dirc = os.path.isdir(root_dir + 'level2')
@@ -77,7 +42,7 @@ def paired_tile_ids_in(slide, label, root_dir):
         for level in range(3):
             dirr = root_dir + 'level{}'.format(str(level))
             for id in os.listdir(dirr):
-                if '.png' in id:
+                if '_{}.png'.format(str(sldnum)) in id:
                     x = int(float(id.split('x-', 1)[1].split('-', 1)[0]) / fac)
                     y = int(float(re.split('.p| |_', id.split('y-', 1)[1])[0]) / fac)
                     try:
@@ -111,90 +76,58 @@ def paired_tile_ids_in(slide, label, root_dir):
 
 
 # Get all svs images with its label as one file; level is the tile resolution level
-def big_image_sum(pmd, path='../tiles/', ref_file='../dummy_His_MUT_joined.csv'):
-    if not os.path.isdir(path):
-        os.mkdir(path)
-        import Cutter
-        Cutter.cut()
-    allimg = image_ids_in(path)
-    ref = pd.read_csv(ref_file, header=0)
+def big_image_sum(pmd, path='../tiles/', dict_file='../tcia_pathology_slides.tsv',
+                  ref_file='../gbm_all_subtype_collections.2019-10-07.tsv'):
+    refdict = {'low': 0, 'high': 1, False: 0, True: 1, 'normal': 0, 'short': 1, 'long': 2}
+    dct = pd.read_csv(dict_file, sep='\t', header=0)
+    dct = dct.loc[dct['used_in_proteome'] == True]
+    ref = pd.read_csv(ref_file, sep='\t', header=0)
+    ref = ref.dropna(subset=[pmd])
+    ref[pmd] = ref[pmd].replace(refdict)
     big_images = []
-    if pmd == 'subtype':
-        MSIimg = intersection(ref.loc[ref['subtype_MSI'] == 1]['name'].tolist(), allimg)
-        EMimg = intersection(ref.loc[ref['subtype_Endometrioid'] == 1]['name'].tolist(), allimg)
-        SLimg = intersection(ref.loc[ref['subtype_Serous-like'] == 1]['name'].tolist(), allimg)
-        POLEimg = intersection(ref.loc[ref['subtype_POLE'] == 1]['name'].tolist(), allimg)
-        for i in MSIimg:
-            big_images.append([i, 0,  path + "{}/".format(i)])
-        for i in EMimg:
-            big_images.append([i, 1, path + "{}/".format(i)])
-        for i in SLimg:
-            big_images.append([i, 2, path + "{}/".format(i)])
-        for i in POLEimg:
-            big_images.append([i, 3, path + "{}/".format(i)])
-    elif pmd == 'histology':
-        allimg = intersection(ref.loc[ref['histology_Mixed'] == 0]['name'].tolist(), allimg)
-        EMimg = intersection(ref.loc[ref['histology_Endometrioid'] == 1]['name'].tolist(), allimg)
-        Serousimg = intersection(ref.loc[ref['histology_Serous'] == 1]['name'].tolist(), allimg)
-        for i in EMimg:
-            big_images.append([i, 0, path + "{}/".format(i)])
-        for i in Serousimg:
-            big_images.append([i, 1, path + "{}/".format(i)])
-    elif pmd in ['Endometrioid', 'MSI', 'Serous-like', 'POLE']:
-        ref = ref.loc[ref['subtype_0NA'] == 0]
-        negimg = intersection(ref.loc[ref['subtype_{}'.format(pmd)] == 0]['name'].tolist(), allimg)
-        posimg = intersection(ref.loc[ref['subtype_{}'.format(pmd)] == 1]['name'].tolist(), allimg)
-        for i in negimg:
-            big_images.append([i, 0, path + "{}/".format(i)])
-        for i in posimg:
-            big_images.append([i, 1, path + "{}/".format(i)])
-    elif pmd == 'MSIst':
-        Himg = intersection(ref.loc[ref['MSIst_MSI-H'] == 1]['name'].tolist(), allimg)
-        Simg = intersection(ref.loc[ref['MSIst_MSS'] == 1]['name'].tolist(), allimg)
-        for i in Himg:
-            big_images.append([i, 1, path + "{}/".format(i)])
-        for i in Simg:
-            big_images.append([i, 0, path + "{}/".format(i)])
-    elif pmd in ['MSIst_MSI-H', 'MSIst_MSI-L', 'MSIst_MSS']:
-        ref = ref.loc[ref['MSIst_0NA'] == 0]
-        negimg = intersection(ref.loc[ref[pmd] == 0]['name'].tolist(), allimg)
-        posimg = intersection(ref.loc[ref[pmd] == 1]['name'].tolist(), allimg)
-        for i in negimg:
-            big_images.append([i, 0, path + "{}/".format(i)])
-        for i in posimg:
-            big_images.append([i, 1, path + "{}/".format(i)])
+    if pmd == 'telomere':
+        normalimg = intersection(ref.loc[ref[pmd] == 0]['case'].tolist(), dct['case_id'].tolist())
+        shortimg = intersection(ref.loc[ref[pmd] == 1]['case'].tolist(), dct['case_id'].tolist())
+        longimg = intersection(ref.loc[ref[pmd] == 2]['case'].tolist(), dct['case_id'].tolist())
+        for i in normalimg:
+            sldnum = i.split('-')[-1]
+            pctnum = i[:-3]
+            big_images.append([pctnum, 0, path + "{}/".format(pctnum), sldnum])
+        for i in shortimg:
+            sldnum = i.split('-')[-1]
+            pctnum = i[:-3]
+            big_images.append([pctnum, 1, path + "{}/".format(pctnum), sldnum])
+        for i in longimg:
+            sldnum = i.split('-')[-1]
+            pctnum = i[:-3]
+            big_images.append([pctnum, 2, path + "{}/".format(pctnum), sldnum])
     else:
-        negimg = intersection(ref.loc[ref[pmd] == 0]['name'].tolist(), allimg)
-        posimg = intersection(ref.loc[ref[pmd] == 1]['name'].tolist(), allimg)
-        for i in negimg:
-            big_images.append([i, 0, path + "{}/".format(i)])
-        for i in posimg:
-            big_images.append([i, 1, path + "{}/".format(i)])
+        negimg = intersection(ref.loc[ref[pmd] == 0]['case'].tolist(), dct['case_id'].tolist())
+        negsld = dct[dct['case_id'].isin(negimg)]['slide_id'].tolist()
+        posimg = intersection(ref.loc[ref[pmd] == 1]['case'].tolist(), dct['case_id'].tolist())
+        possld = dct[dct['case_id'].isin(posimg)]['slide_id'].tolist()
+        for i in negsld:
+            sldnum = i.split('-')[-1]
+            pctnum = i[:-3]
+            big_images.append([pctnum, 0, path + "{}/".format(pctnum), sldnum])
+        for i in possld:
+            sldnum = i.split('-')[-1]
+            pctnum = i[:-3]
+            big_images.append([pctnum, 1, path + "{}/".format(pctnum), sldnum])
 
-    datapd = pd.DataFrame(big_images, columns=['slide', 'label', 'path'])
+    datapd = pd.DataFrame(big_images, columns=['slide', 'label', 'path', 'sldnum'])
 
     return datapd
 
 
 # seperate into training and testing; each type is the same separation ratio on big images
 # test and train csv files contain tiles' path.
-def set_sep(alll, path, cls, cut=0.2, batchsize=24):
+def set_sep(alll, path, cls, cut=0.3, batchsize=24):
     trlist = []
     telist = []
     valist = []
-    TCGA = alll[alll['slide'].str.contains("TCGA")]
-    CPTAC = alll[~alll['slide'].str.contains("TCGA")]
+    CPTAC = alll
     for i in range(cls):
-        subset = TCGA.loc[TCGA['label'] == i]
-        unq = list(subset.slide.unique())
-        np.random.shuffle(unq)
-        validation = unq[:int(len(unq)*cut/2)]
-        valist.append(subset[subset['slide'].isin(validation)])
-        test = unq[int(len(unq)*cut/2):int(len(unq)*cut)]
-        telist.append(subset[subset['slide'].isin(test)])
-        train = unq[int(len(unq)*cut):]
-        trlist.append(subset[subset['slide'].isin(train)])
-
         subset = CPTAC.loc[CPTAC['label'] == i]
         unq = list(subset.slide.unique())
         np.random.shuffle(unq)
@@ -212,13 +145,13 @@ def set_sep(alll, path, cls, cut=0.2, batchsize=24):
     train_tiles = pd.DataFrame(columns=['slide', 'label', 'L0path', 'L1path', 'L2path'])
     validation_tiles = pd.DataFrame(columns=['slide', 'label', 'L0path', 'L1path', 'L2path'])
     for idx, row in test.iterrows():
-        tile_ids = paired_tile_ids_in(row['slide'], row['label'], row['path'])
+        tile_ids = paired_tile_ids_in(row['slide'], row['label'], row['path'], row['sldnum'])
         test_tiles = pd.concat([test_tiles, tile_ids])
     for idx, row in train.iterrows():
-        tile_ids = paired_tile_ids_in(row['slide'], row['label'], row['path'])
+        tile_ids = paired_tile_ids_in(row['slide'], row['label'], row['path'], row['sldnum'])
         train_tiles = pd.concat([train_tiles, tile_ids])
     for idx, row in validation.iterrows():
-        tile_ids = paired_tile_ids_in(row['slide'], row['label'], row['path'])
+        tile_ids = paired_tile_ids_in(row['slide'], row['label'], row['path'], row['sldnum'])
         validation_tiles = pd.concat([validation_tiles, tile_ids])
 
     # No shuffle on test set

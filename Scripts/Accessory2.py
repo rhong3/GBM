@@ -21,8 +21,8 @@ from itertools import cycle
 
 # Plot ROC and PRC plots
 def ROC_PRC(outtl, pdx, path, name, fdict, dm, accur, pmd):
-    if pmd == 'subtype':
-        rdd = 4
+    if pmd == 'telomere':
+        rdd = 3
     else:
         rdd = 2
     if rdd > 2:
@@ -199,18 +199,14 @@ def slide_metrics(inter_pd, path, name, fordict, pmd):
     inter_pd = inter_pd.drop(['L0path', 'L1path', 'L2path', 'label', 'Prediction'], axis=1)
     inter_pd = inter_pd.groupby(['slide']).mean()
     inter_pd = inter_pd.round({'True_label': 0})
-    if pmd == 'subtype':
+    if pmd == 'telomere':
         inter_pd['Prediction'] = inter_pd[
-            ['MSI_score', 'Endometrioid_score', 'Serous-like_score', 'POLE_score']].idxmax(axis=1)
-        redict = {'MSI_score': int(0), 'Endometrioid_score': int(1), 'Serous-like_score': int(2), 'POLE_score': int(3)}
-    elif pmd == 'histology':
+            ['normal_score', 'short_score', 'long_score']].idxmax(axis=1)
+        redict = {'normal_score': int(0), 'short_score': int(1), 'long_score': int(2)}
+    elif pmd == 'immune':
         inter_pd['Prediction'] = inter_pd[
-            ['Endometrioid_score', 'Serous_score']].idxmax(axis=1)
-        redict = {'Endometrioid_score': int(0), 'Serous_score': int(1)}
-    elif pmd == 'MSIst':
-        inter_pd['Prediction'] = inter_pd[
-            ['MSS_score', 'MSI-H_score']].idxmax(axis=1)
-        redict = {'MSI-H_score': int(1), 'MSS_score': int(0)}
+            ['low_score', 'high_score']].idxmax(axis=1)
+        redict = {'low_score': int(0), 'high_score': int(1)}
     else:
         inter_pd['Prediction'] = inter_pd[['NEG_score', 'POS_score']].idxmax(axis=1)
         redict = {'NEG_score': int(0), 'POS_score': int(1)}
@@ -220,25 +216,23 @@ def slide_metrics(inter_pd, path, name, fordict, pmd):
     tott = inter_pd.shape[0]
     accout = inter_pd.loc[inter_pd['Prediction'] == inter_pd['True_label']]
     accu = accout.shape[0]
-    accurr = round(accu/tott, 5)
-    print('Slide Total Accuracy: '+str(accurr))
-    if pmd == 'subtype':
-        for i in range(4):
+    accurr = round(accu / tott, 5)
+    print('Slide Total Accuracy: ' + str(accurr))
+    if pmd == 'telomere':
+        for i in range(3):
             accua = accout[accout.True_label == i].shape[0]
             tota = inter_pd[inter_pd.True_label == i].shape[0]
             try:
                 accuar = round(accua / tota, 5)
-                print('Slide {} Accuracy: '.format(fordict[i])+str(accuar))
+                print('Slide {} Accuracy: '.format(fordict[i]) + str(accuar))
             except ZeroDivisionError:
                 print("No data for {}.".format(fordict[i]))
     try:
         outtl_slide = inter_pd['True_label'].to_frame(name='True_lable')
-        if pmd == 'subtype':
-            pdx_slide = inter_pd[['MSI_score', 'Endometrioid_score', 'Serous-like_score', 'POLE_score']].values
-        elif pmd == 'MSIst':
-            pdx_slide = inter_pd[['MSS_score', 'MSI-H_score']].values
-        elif pmd == 'histology':
-            pdx_slide = inter_pd[['Endometrioid_score', 'Serous_score']].values
+        if pmd == 'telomere':
+            pdx_slide = inter_pd[['normal_score', 'short_score', 'long_score']].values
+        elif pmd == 'immune':
+            pdx_slide = inter_pd[['low_score', 'high_score']].values
         else:
             pdx_slide = inter_pd[['NEG_score', 'POS_score']].values
         ROC_PRC(outtl_slide, pdx_slide, path, name, fordict, 'slide', accurr, pmd)
@@ -251,24 +245,20 @@ def slide_metrics(inter_pd, path, name, fordict, pmd):
 
 # for real image prediction, just output the prediction scores as csv
 def realout(pdx, path, name, pmd):
-    if pmd == 'subtype':
-        lbdict = {0: 'MSI', 1: 'Endometrioid', 2: 'Serous-like', 3: 'POLE'}
-    elif pmd == 'histology':
-        lbdict = {0: 'Endometrioid', 1: 'Serous'}
-    elif pmd == 'MSIst':
-        lbdict = {1: 'MSI-H', 0: 'MSS'}
+    if pmd == 'telomere':
+        lbdict = {0: 'normal', 1: 'short', 2: 'long'}
+    elif pmd == 'immune':
+        lbdict = {0: 'low', 1: 'high'}
     else:
         lbdict = {0: 'negative', 1: pmd}
     pdx = np.asmatrix(pdx)
     prl = pdx.argmax(axis=1).astype('uint8')
-    prl = pd.DataFrame(prl, columns = ['Prediction'])
+    prl = pd.DataFrame(prl, columns=['Prediction'])
     prl = prl.replace(lbdict)
-    if pmd == 'subtype':
-        out = pd.DataFrame(pdx, columns = ['MSI_score', 'Endometrioid_score', 'Serous-like_score', 'POLE_score'])
-    elif pmd == 'histology':
-        out = pd.DataFrame(pdx, columns=['Endometrioid_score', 'Serous_score'])
-    elif pmd == 'MSIst':
-        out = pd.DataFrame(pdx, columns=['MSS_score', 'MSI-H_score'])
+    if pmd == 'telomere':
+        out = pd.DataFrame(pdx, columns=['normal_score', 'short_score', 'long_score'])
+    elif pmd == 'immune':
+        out = pd.DataFrame(pdx, columns=['low_score', 'high_score'])
     else:
         out = pd.DataFrame(pdx, columns=['NEG_score', 'POS_score'])
     out.reset_index(drop=True, inplace=True)
@@ -286,15 +276,12 @@ def metrics(pdx, tl, path, name, pmd, ori_test=None):
     pdxt = np.asmatrix(pdx)
     prl = pdxt.argmax(axis=1).astype('uint8')
     prl = pd.DataFrame(prl, columns=['Prediction'])
-    if pmd == 'subtype':
-        lbdict = {0: 'MSI', 1: 'Endometrioid', 2: 'Serous-like', 3: 'POLE'}
-        outt = pd.DataFrame(pdxt, columns=['MSI_score', 'Endometrioid_score', 'Serous-like_score', 'POLE_score'])
-    elif pmd == 'histology':
-        lbdict = {0: 'Endometrioid', 1: 'Serous'}
-        outt = pd.DataFrame(pdxt, columns=['Endometrioid_score', 'Serous_score'])
-    elif pmd == 'MSIst':
-        lbdict = {1: 'MSI-H', 0: 'MSS'}
-        outt = pd.DataFrame(pdxt, columns=['MSS_score', 'MSI-H_score'])
+    if pmd == 'telomere':
+        lbdict = {0: 'normal', 1: 'short', 2: 'long'}
+        outt = pd.DataFrame(pdxt, columns=['normal_score', 'short_score', 'long_score'])
+    elif pmd == 'immune':
+        lbdict = {0: 'low', 1: 'high'}
+        outt = pd.DataFrame(pdxt, columns=['low_score', 'high_score'])
     else:
         lbdict = {0: 'negative', 1: pmd}
         outt = pd.DataFrame(pdxt, columns=['NEG_score', 'POS_score'])
@@ -329,8 +316,8 @@ def metrics(pdx, tl, path, name, pmd, ori_test=None):
     accu = accout.shape[0]
     accurw = round(accu/tott, 5)
     print('Tile Total Accuracy: '+str(accurw))
-    if pmd == 'subtype':
-        for i in range(4):
+    if pmd == 'telomere':
+        for i in range(3):
             accua = accout[accout.True_label == i].shape[0]
             tota = out[out.True_label == i].shape[0]
             try:
@@ -379,38 +366,27 @@ def py_map2jpg(imgmap, rang, colorMap):
 # y are labels; path is output folder, name is test/validation; rd is current batch number
 def CAM(net, w, pred, x, y, path, name, bs, pmd, rd=0):
     DIRT = "../Results/{}/out/{}_img".format(path, name)
-    if pmd == 'subtype':
-        DIRA = "../Results/{}/out/{}_img/MSI".format(path, name)
-        DIRB = "../Results/{}/out/{}_img/Endometrioid".format(path, name)
-        DIRC = "../Results/{}/out/{}_img/Serous-like".format(path, name)
-        DIRD = "../Results/{}/out/{}_img/POLE".format(path, name)
-        for DIR in (DIRT, DIRA, DIRB, DIRC, DIRD):
+    if pmd == 'telomere':
+        DIRA = "../Results/{}/out/{}_img/normal".format(path, name)
+        DIRB = "../Results/{}/out/{}_img/short".format(path, name)
+        DIRC = "../Results/{}/out/{}_img/long".format(path, name)
+        for DIR in (DIRT, DIRA, DIRB, DIRC):
             try:
                 os.mkdir(DIR)
             except FileExistsError:
                 pass
-        catdict = {0: 'MSI', 1: 'Endometrioid', 2: 'Serous-like', 3: 'POLE'}
-        dirdict = {0: DIRA, 1: DIRB, 2: DIRC, 3: DIRD}
-    elif pmd == 'histology':
-        DIRA = "../Results/{}/out/{}_img/Endometrioid".format(path, name)
-        DIRB = "../Results/{}/out/{}_img/Serous".format(path, name)
+        catdict = {0: 'normal', 1: 'short', 2: 'long'}
+        dirdict = {0: DIRA, 1: DIRB, 2: DIRC}
+    elif pmd == 'immune':
+        DIRA = "../Results/{}/out/{}_img/low".format(path, name)
+        DIRB = "../Results/{}/out/{}_img/high".format(path, name)
         for DIR in (DIRT, DIRA, DIRB):
             try:
                 os.mkdir(DIR)
             except FileExistsError:
                 pass
-        catdict = {0: 'Endometrioid', 1: 'Serous'}
+        catdict = {0: 'low', 1: 'high'}
         dirdict = {0: DIRA, 1: DIRB}
-    elif pmd == 'MSIst':
-        DIRA = "../Results/{}/out/{}_MSI-H_img".format(path, name)
-        DIRB = "../Results/{}/out/{}_MSS_img".format(path, name)
-        for DIR in (DIRA, DIRB):
-            try:
-                os.mkdir(DIR)
-            except FileExistsError:
-                pass
-        catdict = {1: 'MSI-H', 0: 'MSS'}
-        dirdict = {1: DIRA, 0: DIRB}
     else:
         DIRA = "../Results/{}/out/{}_img/NEG".format(path, name)
         DIRB = "../Results/{}/out/{}_img/POS".format(path, name)
@@ -538,12 +514,10 @@ def tSNE_prep(flatnet, ori_test, y, pred, path, pmd):
     prl = pd.DataFrame(prl, columns=['Prediction'])
     print(np.shape(flatnet))
     act = pd.DataFrame(np.asmatrix(flatnet))
-    if pmd == 'subtype':
-        outt = pd.DataFrame(pdxt, columns=['MSI_score', 'Endometrioid_score', 'Serous-like_score', 'POLE_score'])
-    elif pmd == 'histology':
-        outt = pd.DataFrame(pdxt, columns=['Endometrioid_score', 'Serous_score'])
-    elif pmd == 'MSIst':
-        outt = pd.DataFrame(pdxt, columns=['MSS_score', 'MSI-H_score'])
+    if pmd == 'telomere':
+        outt = pd.DataFrame(pdxt, columns=['normal_score', 'low_score', 'high_score'])
+    elif pmd == 'immune':
+        outt = pd.DataFrame(pdxt, columns=['low_score', 'high_score'])
     else:
         outt = pd.DataFrame(pdxt, columns=['NEG_score', 'POS_score'])
     outtlt = pd.DataFrame(tl, columns=['True_label'])

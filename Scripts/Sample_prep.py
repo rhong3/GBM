@@ -62,15 +62,15 @@ def big_image_sum(pmd, path='../tiles/', dict_file='../tcia_pathology_slides.tsv
             longimg = intersection(ref.loc[ref[pmd] == 2]['case'].tolist(), dct['case_id'].tolist())
             for i in normalimg:
                 sldnum = i.split('-')[-1]
-                pctnum = i[:-4]
+                pctnum = i[:-3]
                 big_images.append([pctnum, level, path + "{}/level{}".format(pctnum, level), sldnum, 0])
             for i in shortimg :
                 sldnum = i.split('-')[-1]
-                pctnum = i[:-4]
+                pctnum = i[:-3]
                 big_images.append([pctnum, level, path + "{}/level{}".format(pctnum, level), sldnum, 1])
             for i in longimg:
                 sldnum = i.split('-')[-1]
-                pctnum = i[:-4]
+                pctnum = i[:-3]
                 big_images.append([pctnum, level, path + "{}/level{}".format(pctnum, level), sldnum, 2])
         else:
             negimg = intersection(ref.loc[ref[pmd] == 0]['case'].tolist(), dct['case_id'].tolist())
