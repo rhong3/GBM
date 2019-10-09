@@ -37,8 +37,8 @@ try:
 except IndexError:
     ep = 100
 
-if pdmd == 'subtype':
-    classes = 4
+if pdmd == 'telomere':
+    classes = 3
 else:
     classes = 2
 

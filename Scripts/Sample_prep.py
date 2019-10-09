@@ -1,5 +1,5 @@
 """
-Prepare training and testing datasets as CSV dictionaries (Further modification required for GBM)
+Prepare training and testing datasets as CSV dictionaries
 
 Created on 11/26/2018
 
@@ -45,19 +45,37 @@ def tile_ids_in(slide, level, root_dir, label, sldnum):
 
 
 # Get all svs images with its label as one file; level is the tile resolution level
-def big_image_sum(pmd, path='../tiles/', dict_file='../tcia_pathology_slides.tsv', ref_file='../dummy_His_MUT_joined.csv'):
+def big_image_sum(pmd, path='../tiles/', dict_file='../tcia_pathology_slides.tsv',
+                  ref_file='../gbm_all_subtype_collections.2019-10-07.tsv'):
+    refdict = {'low': 0, 'high': 1, 'FALSE': 0, 'TRUE': 1, 'normal': 0, 'short': 1, 'long': 2}
     dct = pd.read_csv(dict_file, sep='\t', header=0)
     dct = dct.loc[dct['used_in_proteome'] == 'TRUE']
-    ref = pd.read_csv(ref_file, header=0)
+    ref = pd.read_csv(ref_file, sep='\t', header=0)
+    ref = ref.dropna(subset=[pmd])
+    ref[pmd] = ref[pmd].replace(refdict)
     big_images = []
     for level in range(3):
         level = str(level)
-        if pmd == 'subtype':
-            print(None)
+        if pmd == 'telomere':
+            normalimg = intersection(ref.loc[ref[pmd] == 0]['case'].tolist(), dct['case_id'].tolist())
+            shortimg = intersection(ref.loc[ref[pmd] == 1]['case'].tolist(), dct['case_id'].tolist())
+            longimg = intersection(ref.loc[ref[pmd] == 2]['case'].tolist(), dct['case_id'].tolist())
+            for i in normalimg:
+                sldnum = i.split('-')[-1]
+                pctnum = i[:-4]
+                big_images.append([i, level, path + "{}/level{}".format(pctnum, level), sldnum, 0])
+            for i in shortimg :
+                sldnum = i.split('-')[-1]
+                pctnum = i[:-4]
+                big_images.append([i, level, path + "{}/level{}".format(pctnum, level), sldnum, 1])
+            for i in longimg:
+                sldnum = i.split('-')[-1]
+                pctnum = i[:-4]
+                big_images.append([i, level, path + "{}/level{}".format(pctnum, level), sldnum, 2])
         else:
-            negimg = intersection(ref.loc[ref[pmd] == 0]['name'].tolist(), dct['case_id'].tolist())
+            negimg = intersection(ref.loc[ref[pmd] == 0]['case'].tolist(), dct['case_id'].tolist())
             negsld = dct[dct['case_id'].isin(negimg)]['slide_id'].tolist()
-            posimg = intersection(ref.loc[ref[pmd] == 1]['name'].tolist(), dct['case_id'].tolist())
+            posimg = intersection(ref.loc[ref[pmd] == 1]['case'].tolist(), dct['case_id'].tolist())
             possld = dct[dct['case_id'].isin(posimg)]['slide_id'].tolist()
             for i in negsld:
                 sldnum = i.split('-')[-1]
@@ -75,7 +93,7 @@ def big_image_sum(pmd, path='../tiles/', dict_file='../tcia_pathology_slides.tsv
 
 # seperate into training and testing; each type is the same separation ratio on big images
 # test and train csv files contain tiles' path.
-def set_sep(alll, path, cls, level=None, cut=0.2, batchsize=64):
+def set_sep(alll, path, cls, level=None, cut=0.3, batchsize=64):
     trlist = []
     telist = []
     valist = []
