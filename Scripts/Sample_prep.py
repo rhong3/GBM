@@ -56,17 +56,20 @@ def big_image_sum(pmd, path='../tiles/', dict_file='../tcia_pathology_slides.tsv
         level = str(level)
         if pmd == 'telomere':
             normalimg = intersection(ref.loc[ref[pmd] == 0]['case'].tolist(), dct['case_id'].tolist())
+            normalsld = dct[dct['case_id'].isin(normalimg)]['slide_id'].tolist()
             shortimg = intersection(ref.loc[ref[pmd] == 1]['case'].tolist(), dct['case_id'].tolist())
+            shortsld = dct[dct['case_id'].isin(shortimg)]['slide_id'].tolist()
             longimg = intersection(ref.loc[ref[pmd] == 2]['case'].tolist(), dct['case_id'].tolist())
-            for i in normalimg:
+            longsld = dct[dct['case_id'].isin(longimg)]['slide_id'].tolist()
+            for i in normalsld:
                 sldnum = i.split('-')[-1]
                 pctnum = i[:-3]
                 big_images.append([pctnum, level, path + "{}/level{}".format(pctnum, level), sldnum, 0])
-            for i in shortimg :
+            for i in shortsld:
                 sldnum = i.split('-')[-1]
                 pctnum = i[:-3]
                 big_images.append([pctnum, level, path + "{}/level{}".format(pctnum, level), sldnum, 1])
-            for i in longimg:
+            for i in longsld:
                 sldnum = i.split('-')[-1]
                 pctnum = i[:-3]
                 big_images.append([pctnum, level, path + "{}/level{}".format(pctnum, level), sldnum, 2])
