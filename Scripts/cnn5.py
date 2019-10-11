@@ -16,7 +16,8 @@ import tensorflow as tf
 import Accessory2 as ac
 
 
-class INCEPTION():
+# Define an Inception
+class INCEPTION:
     # hyper parameters
     DEFAULTS = {
         "batch_size": 128,
@@ -396,7 +397,7 @@ class INCEPTION():
                                 self.valid_logger.flush()
                                 self.valid_logger.close()
 
-                            except(AttributeError):  # not logging
+                            except AttributeError:  # not logging
                                 print('Not logging', flush=True)
                             break
 
@@ -438,7 +439,7 @@ class INCEPTION():
                             self.valid_logger.flush()
                             self.valid_logger.close()
 
-                        except(AttributeError):  # not logging
+                        except AttributeError:  # not logging
                             print('Not logging', flush=True)
 
                         break
@@ -486,7 +487,7 @@ class INCEPTION():
                         self.valid_logger.flush()
                         self.valid_logger.close()
 
-                    except(AttributeError):  # not logging
+                    except AttributeError:  # not logging
                         print('Not logging', flush=True)
 
                 except tf.errors.OutOfRangeError:
@@ -499,7 +500,7 @@ class INCEPTION():
 
             print("--- %s seconds ---" % (time.time() - start_time))
 
-        except(KeyboardInterrupt):
+        except KeyboardInterrupt:
 
             print("final avg loss (@ step {} = epoch {}): {}".format(
                 i, np.around(i / ct * bs), err_train / i), flush=True)
@@ -517,7 +518,7 @@ class INCEPTION():
                 self.valid_logger.flush()
                 self.valid_logger.close()
 
-            except(AttributeError):  # not logging
+            except AttributeError:  # not logging
                 print('Not logging', flush=True)
 
             sys.exit(0)

@@ -341,8 +341,7 @@ def py_returnCAMmap(activation, weights_LR):
         weights_vec = np.reshape(weights_LR[t], [1, weights_LR[t].shape[0]])
         heatmap_vec = np.dot(weights_vec,act_vec)
         heatmap = np.reshape(np.squeeze(heatmap_vec), [w, h])
-        out[:,:,t] = heatmap
-
+        out[:, :, t] = heatmap
     return out
 
 
@@ -352,12 +351,8 @@ def im2double(im):
 
 
 # image to jpg
-def py_map2jpg(imgmap, rang, colorMap):
-    if rang is None:
-        rang = [np.min(imgmap), np.max(imgmap)]
-
+def py_map2jpg(imgmap):
     heatmap_x = np.round(imgmap*255).astype(np.uint8)
-
     return cv2.applyColorMap(heatmap_x, cv2.COLORMAP_JET)
 
 
