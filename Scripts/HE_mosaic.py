@@ -38,7 +38,7 @@ def sample(dat, md, bins):
             for j in range(bins):
                 try:
                     sub = dat.loc[(dat['x_int'] == i) & (dat['y_int'] == j)
-                                    & (dat[redict[m]] > 0.51) & (dat['True_label'] == m)]
+                                    & (dat[redict[m]] > 0.7) & (dat['True_label'] == m)]
                     picked = sub.sample(1, replace=False)
                     for idx, row in picked.iterrows():
                         sampledls.append([row['path'], row['x_int'], row['y_int']])
@@ -53,9 +53,9 @@ if __name__ == "__main__":
 
     for i in dirls:
         try:
-            ipdat = pd.read_csv('../Results/NL3/{}/out/{}.csv'.format(i, filename))
+            ipdat = pd.read_csv('../Results/{}/out/{}.csv'.format(i, filename))
             imdat = sample(ipdat, pdmd, bin)
-            imdat.to_csv('../Results/NL3/{}/out/tsne_selected.csv'.format(i), index=False)
+            imdat.to_csv('../Results/{}/out/tsne_selected.csv'.format(i), index=False)
 
             new_im = Image.new(mode='RGB', size=(size*(bin+1), size*(bin+1)), color='white')
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                 except FileNotFoundError:
                     print(impath)
                     pass
-            new_im.save(os.path.abspath('../Results/NL3/{}/out/{}.jpeg'.format(i, outim)), "JPEG")
+            new_im.save(os.path.abspath('../Results/{}/out/{}.jpeg'.format(i, outim)), "JPEG")
             print('{} done'.format(i))
         except FileNotFoundError:
             print('{} passed'.format(i))
