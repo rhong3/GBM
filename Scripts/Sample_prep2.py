@@ -77,7 +77,7 @@ def big_image_sum(pmd, path='../tiles/', dict_file='../tcia_pathology_slides.tsv
                   ref_file='../gbm_all_subtype_collections.2019-10-07.tsv'):
     refdict = {'low': 0, 'high': 1, False: 0, True: 1, 'normal': 0, 'short': 1, 'long': 2}
     dct = pd.read_csv(dict_file, sep='\t', header=0)
-    dct = dct.loc[dct['used_in_proteome'] == True]
+    # dct = dct.loc[dct['used_in_proteome'] == True]
     ref = pd.read_csv(ref_file, sep='\t', header=0)
     ref = ref.dropna(subset=[pmd])
     ref[pmd] = ref[pmd].replace(refdict)
