@@ -42,7 +42,7 @@ def paired_tile_ids_in(slide, label, root_dir, sldnum):
             for id in os.listdir(dirr):
                 if '_{}.png'.format(str(sldnum)) in id:
                     x = int(float(id.split('x-', 1)[1].split('-', 1)[0]) / fac)
-                    y = int(float(re.split('.p| |_', id.split('y-', 1)[1])[0]) / fac)
+                    y = int(float(re.split('_', id.split('y-', 1)[1])[0]) / fac)
                     try:
                         dup = int(re.split('.p', re.split('_', id.split('y-', 1)[1])[1])[0])
                     except IndexError:
