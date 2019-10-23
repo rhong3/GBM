@@ -19,36 +19,17 @@ import matplotlib
 matplotlib.use('Agg')
 
 dirr = sys.argv[1]  # output directory
-bs = sys.argv[2]    # batch size
-bs = int(bs)
-md = sys.argv[3]    # architecture to use
-pdmd = sys.argv[4]  # feature to predict
+pdmd = sys.argv[2]  # feature to predict
 
 try:
-    level = sys.argv[5]  # magnification of tiles to use
+    level = sys.argv[3]  # magnification of tiles to use
 except IndexError:
     level = None
-
-try:
-    ep = sys.argv[6]  # epochs to train
-    ep = int(ep)
-except IndexError:
-    ep = 100
 
 if pdmd == 'telomere':
     classes = 3
 else:
     classes = 2
-
-# input image dimension
-INPUT_DIM = [bs, 299, 299, 3]
-# hyper parameters
-HYPERPARAMS = {
-    "batch_size": bs,
-    "dropout": 0.3,
-    "learning_rate": 1E-4,
-    "classes": classes
-}
 
 # paths to directories
 img_dir = '../tiles/'
