@@ -134,6 +134,14 @@ class INCEPTION:
                                                    dropout_keep_prob=dropout,
                                                    scope='InceptionResV2')
             print('Using Inception-Resnet-V2')
+        elif model == 'S1':
+            import Simple1
+            logits, nett, ww = Simple1.simplev1(x_in_reshape,
+                                                   num_classes=classes,
+                                                   is_training=is_train,
+                                                   dropout_keep_prob=dropout,
+                                                   scope='InceptionResV2')
+            print('Using Inception-Resnet-V2')
         else:
             import InceptionV1
             logits, nett, ww = InceptionV1.googlenet(x_in_reshape,
