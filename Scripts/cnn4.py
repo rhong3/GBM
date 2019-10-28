@@ -141,7 +141,7 @@ class INCEPTION:
                                                    is_training=is_train,
                                                    dropout_keep_prob=dropout,
                                                    scope='InceptionResV2')
-            print('Using Inception-Resnet-V2')
+            print('Using SimpleV1')
         else:
             import InceptionV1
             logits, nett, ww = InceptionV1.googlenet(x_in_reshape,
