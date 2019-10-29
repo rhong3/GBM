@@ -20,6 +20,7 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 
+
 dirr = sys.argv[1]  # output directory
 bs = sys.argv[2]    # batch size
 bs = int(bs)
