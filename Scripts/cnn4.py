@@ -140,7 +140,7 @@ class INCEPTION:
                                                    num_classes=classes,
                                                    is_training=is_train,
                                                    dropout_keep_prob=dropout,
-                                                   scope='InceptionResV2')
+                                                   scope='SimpleV1')
             print('Using SimpleV1')
         else:
             import InceptionV1

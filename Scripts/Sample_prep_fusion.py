@@ -10,15 +10,22 @@ import pandas as pd
 import sklearn.utils as sku
 import numpy as np
 
+ids = pd.DataFrame(ids, columns=['slide', 'level', 'path', 'weight', 'percent_tumor_nuclei',
+                                 'percent_total_cellularity', 'percent_necrosis', 'age', 'gender_Female',
+                                 'gender_Male', 'frontal', 'temporal', 'left', 'right', 'occipital', 'parietal',
+                                 'label'])
 
-def tile_ids_in(slide, level, root_dir, label, sldnum):
+def tile_ids_in(inp):
     ids = []
     try:
-        for id in os.listdir(root_dir):
-            if '_{}.png'.format(str(sldnum)) in id:
-                ids.append([slide, level, root_dir+'/'+id, label])
+        for id in os.listdir(inp['path']):
+            if '_{}.png'.format(str(inp['sldnum'])) in id:
+                ids.append([inp['slide'], inp['level'], inp['path']+'/'+id, inp['weight'], inp['percent_tumor_nuclei'],
+                            inp['percent_total_cellularity'], inp['percent_necrosis'], inp['age'], inp['gender_Female'],
+                            inp['gender_Male'], inp['frontal'], inp['temporal'], inp['left'], inp['right'],
+                            inp['occipital'], inp['parietal'], inp['label']])
     except FileNotFoundError:
-        print('Ignore:', root_dir)
+        print('Ignore:', inp['path'])
 
     return ids
 
@@ -30,7 +37,9 @@ def big_image_sum(pmd, path='../tiles/', ref_file='../feature_summary.csv'):
     ref = ref.rename(columns={pmd: 'label'})
     ref = ref.dropna(subset=['label'])
     ref['sldnum'] = ref['slide_id'].str.split("-", n=2, expand=True)[-1]
-    ref = ref[['case_id', 'sldnum', 'label']]
+    ref = ref[['case_id', 'sldnum', 'weight', 'percent_tumor_nuclei', 'percent_total_cellularity', 'percent_necrosis',
+               'age', 'gender_Female', 'gender_Male', 'frontal', 'temporal', 'left', 'right', 'occipital', 'parietal',
+               'label']]
     ref = ref.rename(columns={'case_id': 'slide'})
     ref1 = ref
     ref2 = ref
@@ -73,17 +82,27 @@ def set_sep(alll, path, cls, level=None, cut=0.3, batchsize=64):
     train_tiles_list = []
     validation_tiles_list = []
     for idx, row in test.iterrows():
-        tile_ids = tile_ids_in(row['slide'], row['level'], row['path'], row['label'], row['sldnum'])
+        tile_ids = tile_ids_in(row)
         test_tiles_list.extend(tile_ids)
     for idx, row in train.iterrows():
-        tile_ids = tile_ids_in(row['slide'], row['level'], row['path'], row['label'], row['sldnum'])
+        tile_ids = tile_ids_in(row)
         train_tiles_list.extend(tile_ids)
     for idx, row in validation.iterrows():
-        tile_ids = tile_ids_in(row['slide'], row['level'], row['path'], row['label'], row['sldnum'])
+        tile_ids = tile_ids_in(row)
         validation_tiles_list.extend(tile_ids)
-    test_tiles = pd.DataFrame(test_tiles_list, columns=['slide', 'level', 'path', 'label'])
-    train_tiles = pd.DataFrame(train_tiles_list, columns=['slide', 'level', 'path', 'label'])
-    validation_tiles = pd.DataFrame(validation_tiles_list, columns=['slide', 'level', 'path', 'label'])
+    test_tiles = pd.DataFrame(test_tiles_list, columns=['slide', 'level', 'path', 'weight', 'percent_tumor_nuclei',
+                                                        'percent_total_cellularity', 'percent_necrosis', 'age',
+                                                        'gender_Female', 'gender_Male', 'frontal', 'temporal', 'left',
+                                                        'right', 'occipital', 'parietal', 'label'])
+    train_tiles = pd.DataFrame(train_tiles_list, columns=['slide', 'level', 'path', 'weight', 'percent_tumor_nuclei',
+                                                          'percent_total_cellularity', 'percent_necrosis', 'age',
+                                                          'gender_Female', 'gender_Male', 'frontal', 'temporal', 'left',
+                                                          'right', 'occipital', 'parietal', 'label'])
+    validation_tiles = pd.DataFrame(validation_tiles_list, columns=['slide', 'level', 'path', 'weight',
+                                                                    'percent_tumor_nuclei', 'percent_total_cellularity',
+                                                                    'percent_necrosis', 'age', 'gender_Female',
+                                                                    'gender_Male', 'frontal', 'temporal', 'left',
+                                                                    'right', 'occipital', 'parietal', 'label'])
 
     # No shuffle on test set
     train_tiles = sku.shuffle(train_tiles)

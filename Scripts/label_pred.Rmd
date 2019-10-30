@@ -45,7 +45,7 @@ mgtb[which(grepl("right", mgtb$tumor_site, ignore.case=TRUE)), "right"] = 1
 
 mgmg = merge(mgtb, lbtb, by="case_id")
 row.names(mgmg) = mgmg$slide_id
-write.csv(mgmg, '~/Documents/GBM/feature_summary.csv', row.names=TRUE)
+write.csv(mgmg, '~/Documents/GBM/feature_summary.csv', row.names=FALSE)
 mgmg = subset(mgmg, select=-c(case_id, slide_id, tumor_site, gender, used_in_proteome))
 
 mgmg.gcimp = subset(mgmg, select=-c(immune, telomere))

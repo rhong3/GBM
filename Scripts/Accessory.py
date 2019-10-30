@@ -201,7 +201,7 @@ def slide_metrics(inter_pd, path, name, fordict, pmd):
     if pmd == 'telomere':
         inter_pd['Prediction'] = inter_pd[
             ['normal_score', 'short_score', 'long_score']].idxmax(axis=1)
-        redict = {'normal_score': int(0), 'short_score': int(1), 'long_score': int(2)}
+        redict = {'short_score': int(0), 'normal_score': int(1), 'long_score': int(2)}
     elif pmd == 'immune':
         inter_pd['Prediction'] = inter_pd[
             ['low_score', 'high_score']].idxmax(axis=1)
@@ -229,7 +229,7 @@ def slide_metrics(inter_pd, path, name, fordict, pmd):
     try:
         outtl_slide = inter_pd['True_label'].to_frame(name='True_lable')
         if pmd == 'telomere':
-            pdx_slide = inter_pd[['normal_score', 'short_score', 'long_score']].values
+            pdx_slide = inter_pd[['short_score', 'normal_score', 'long_score']].values
         elif pmd == 'immune':
             pdx_slide = inter_pd[['low_score', 'high_score']].values
         else:
@@ -245,7 +245,7 @@ def slide_metrics(inter_pd, path, name, fordict, pmd):
 # for real image prediction, just output the prediction scores as csv
 def realout(pdx, path, name, pmd):
     if pmd == 'telomere':
-        lbdict = {0: 'normal', 1: 'short', 2: 'long'}
+        lbdict = {0: 'short', 1: 'normal', 2: 'long'}
     elif pmd == 'immune':
         lbdict = {0: 'low', 1: 'high'}
     else:
@@ -255,7 +255,7 @@ def realout(pdx, path, name, pmd):
     prl = pd.DataFrame(prl, columns=['Prediction'])
     prl = prl.replace(lbdict)
     if pmd == 'telomere':
-        out = pd.DataFrame(pdx, columns=['normal_score', 'short_score', 'long_score'])
+        out = pd.DataFrame(pdx, columns=['short_score', 'normal_score', 'long_score'])
     elif pmd == 'immune':
         out = pd.DataFrame(pdx, columns=['low_score', 'high_score'])
     else:
@@ -276,8 +276,8 @@ def metrics(pdx, tl, path, name, pmd, ori_test=None):
     prl = pdxt.argmax(axis=1).astype('uint8')
     prl = pd.DataFrame(prl, columns=['Prediction'])
     if pmd == 'telomere':
-        lbdict = {0: 'normal', 1: 'short', 2: 'long'}
-        outt = pd.DataFrame(pdxt, columns=['normal_score', 'short_score', 'long_score'])
+        lbdict = {0: 'short', 1: 'normal', 2: 'long'}
+        outt = pd.DataFrame(pdxt, columns=['short_score', 'normal_score', 'long_score'])
     elif pmd == 'immune':
         lbdict = {0: 'low', 1: 'high'}
         outt = pd.DataFrame(pdxt, columns=['low_score', 'high_score'])
@@ -360,15 +360,15 @@ def py_map2jpg(imgmap):
 # y are labels; path is output folder, name is test/validation; rd is current batch number
 def CAM(net, w, pred, x, y, path, name, bs, pmd, rd=0):
     if pmd == 'telomere':
-        DIRA = "../Results/{}/out/{}_normal_img".format(path, name)
-        DIRB = "../Results/{}/out/{}_short_img".format(path, name)
+        DIRA = "../Results/{}/out/{}_short_img".format(path, name)
+        DIRB = "../Results/{}/out/{}_normal_img".format(path, name)
         DIRC = "../Results/{}/out/{}_long_img".format(path, name)
         for DIR in (DIRA, DIRB, DIRC):
             try:
                 os.mkdir(DIR)
             except FileExistsError:
                 pass
-        catdict = {0: 'normal', 1: 'short', 2: 'long'}
+        catdict = {0: 'short', 1: 'normal', 2: 'long'}
         dirdict = {0: DIRA, 1: DIRB, 2: DIRC}
     elif pmd == 'immune':
         DIRA = "../Results/{}/out/{}_low_img".format(path, name)
@@ -507,7 +507,7 @@ def tSNE_prep(flatnet, ori_test, y, pred, path, pmd):
     print(np.shape(flatnet))
     act = pd.DataFrame(np.asmatrix(flatnet))
     if pmd == 'telomere':
-        outt = pd.DataFrame(pdxt, columns=['normal_score', 'low_score', 'high_score'])
+        outt = pd.DataFrame(pdxt, columns=['short_score', 'normal_score', 'long_score'])
     elif pmd == 'immune':
         outt = pd.DataFrame(pdxt, columns=['low_score', 'high_score'])
     else:

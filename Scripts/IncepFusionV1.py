@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-XeptionV3 for TF2.0
+InceptionV6 for TF2.0
 
-Created on 04/17/2019
+Created on 03/19/2019
 
 @author: RH
 """
@@ -14,6 +14,7 @@ from keras.layers.core import Dense, Dropout, Flatten, Activation, Lambda
 from keras.layers.normalization import BatchNormalization
 from keras.layers.merge import concatenate, add
 from keras.regularizers import l2
+
 
 def resnet_v2_stem(input):
     '''The stem of the pure Inception-v4 and Inception-ResNet-v2 networks. This is input part of those networks.'''
@@ -156,84 +157,68 @@ def reduction_resnet_v2_B(input):
     return rbr
 
 
-def Branch(input, dropout_keep_prob=0.8, num_classes=1000, is_training=True):
-    # Input shape is 299 * 299 * 3
-    x = resnet_v2_stem(input)  # Output: 35 * 35 * 256
+def inceptionresnetv2(input, dropout_keep_prob=0.8, num_classes=1000, is_training=True, scope='InceptionResnetV2'):
+    '''Creates the Inception_ResNet_v2 network.'''
+    with tf.variable_scope(scope, 'InceptionResnetV2', [input]):
+        # Input shape is 299 * 299 * 3
+        x = resnet_v2_stem(input)  # Output: 35 * 35 * 256
 
-    # 5 x Inception A
-    for i in range(5):
-        x = inception_resnet_v2_A(x)
-        # Output: 35 * 35 * 256
+        # 5 x Inception A
+        for i in range(5):
+            x = inception_resnet_v2_A(x)
+            # Output: 35 * 35 * 256
 
-    # Reduction A
-    x = reduction_resnet_A(x, k=256, l=256, m=384, n=384)  # Output: 17 * 17 * 896
+        # Reduction A
+        x = reduction_resnet_A(x, k=256, l=256, m=384, n=384)  # Output: 17 * 17 * 896
 
-    # 10 x Inception B
-    for i in range(10):
-        x = inception_resnet_v2_B(x)
-        # Output: 17 * 17 * 896
+        # 10 x Inception B
+        for i in range(10):
+            x = inception_resnet_v2_B(x)
+            # Output: 17 * 17 * 896
 
-    # auxiliary
-    loss2_ave_pool = AveragePooling2D(pool_size=(5, 5), strides=(3, 3), name='loss2/ave_pool')(x)
+        # auxiliary
+        loss2_ave_pool = AveragePooling2D(pool_size=(5, 5), strides=(3, 3), name='loss2/ave_pool')(x)
 
-    loss2_conv_a = Conv2D(128, (1, 1), kernel_regularizer=l2(0.0002), activation="relu", padding="same")(
-        loss2_ave_pool)
-    loss2_conv_b = Conv2D(768, (5, 5), kernel_regularizer=l2(0.0002), activation="relu", padding="same")(
-        loss2_conv_a)
+        loss2_conv_a = Conv2D(128, (1, 1), kernel_regularizer=l2(0.0002), activation="relu", padding="same")(
+            loss2_ave_pool)
+        loss2_conv_b = Conv2D(768, (5, 5), kernel_regularizer=l2(0.0002), activation="relu", padding="same")(
+            loss2_conv_a)
 
-    loss2_conv_b = BatchNormalization(axis=3)(loss2_conv_b)
+        loss2_conv_b = BatchNormalization(axis=3)(loss2_conv_b)
 
-    loss2_conv_b = Activation('relu')(loss2_conv_b)
+        loss2_conv_b = Activation('relu')(loss2_conv_b)
 
-    loss2_flat = Flatten()(loss2_conv_b)
+        loss2_flat = Flatten()(loss2_conv_b)
 
-    loss2_fc = Dense(1024, activation='relu', name='loss2/fc', kernel_regularizer=l2(0.0002))(loss2_flat)
+        loss2_fc = Dense(1024, activation='relu', name='loss2/fc', kernel_regularizer=l2(0.0002))(loss2_flat)
 
-    loss2_drop_fc = Dropout(dropout_keep_prob)(loss2_fc, training=is_training)
+        loss2_drop_fc = Dropout(dropout_keep_prob)(loss2_fc, training=is_training)
 
-    loss2_classifier = Dense(num_classes, name='loss2/classifier', kernel_regularizer=l2(0.0002))(loss2_drop_fc)
+        loss2_classifier = Dense(num_classes, name='loss2/classifier', kernel_regularizer=l2(0.0002))(loss2_drop_fc)
 
-    # Reduction B
-    x = reduction_resnet_v2_B(x)  # Output: 8 * 8 * 1792
+        # Reduction B
+        x = reduction_resnet_v2_B(x)  # Output: 8 * 8 * 1792
 
-    # 5 x Inception C
-    for i in range(5):
-        x = inception_resnet_v2_C(x)
-        # Output: 8 * 8 * 1792
-
-    x = Conv2D(896, (1, 1), kernel_regularizer=l2(0.0002), activation="relu", padding="same")(x)
-
-    return x, loss2_classifier
-
-
-def XecptionV3(inputa, inputb, inputc, dropout=0.8, num_cls=1000, is_train=True, scope='XecptionV1'):
-    with tf.variable_scope(scope, 'XecptionV3', [inputa, inputb, inputc]):
-
-        xa, auxa = Branch(inputa, dropout_keep_prob=dropout, num_classes=num_cls, is_training=is_train)
-        xb, auxb = Branch(inputb, dropout_keep_prob=dropout, num_classes=num_cls, is_training=is_train)
-        xc, auxc = Branch(inputc, dropout_keep_prob=dropout, num_classes=num_cls, is_training=is_train)
-
-        x = concatenate([xa, xb, xc], axis=3) # Output: 8 * 8 * 2688
-
-        x = Conv2D(2688, (1, 1), kernel_regularizer=l2(0.0002), activation="relu", padding="same")(x)
+        # 5 x Inception C
+        for i in range(5):
+            x = inception_resnet_v2_C(x)
+            # Output: 8 * 8 * 1792
 
         net = x
 
-        loss2_classifier = tf.add(auxa, tf.add(auxb, auxc))
-
         # Average Pooling
-        x = GlobalAveragePooling2D(name='avg_pool')(x)  # Output: 2688
+        x = GlobalAveragePooling2D(name='avg_pool')(x)  # Output: 1792
 
-        pool5_drop_10x10_s1 = Dropout(dropout)(x, training=is_train)
+        pool5_drop_10x10_s1 = Dropout(dropout_keep_prob)(x, training=is_training)
 
-        loss3_classifier_W = Dense(num_cls, name='loss3/classifier', kernel_regularizer=l2(0.0002))
+        loss3_classifier_W = Dense(num_classes, name='loss3/classifier', kernel_regularizer=l2(0.0002))
 
         loss3_classifier = loss3_classifier_W(pool5_drop_10x10_s1)
 
         w_variables = loss3_classifier_W.get_weights()
 
-        logits = tf.cond(tf.equal(is_train, tf.constant(True)),
-                         lambda: tf.add(loss3_classifier, tf.scalar_mul(tf.constant(0.1), loss2_classifier)),
+        logits = tf.cond(tf.equal(is_training, tf.constant(True)),
+                         lambda: tf.add(loss3_classifier, tf.scalar_mul(tf.constant(0.3), loss2_classifier)),
                          lambda: loss3_classifier)
 
         return logits, net, tf.convert_to_tensor(w_variables[0])
