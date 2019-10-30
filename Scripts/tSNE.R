@@ -9,12 +9,12 @@
 # bins=args[5]
 # POS_score=args[6]
 
-input_file='/Users/rh2740/documents/GBM/Results/I6immune/out/For_tSNE.csv'
-output_file='/Users/rh2740/documents/GBM/Results/I6immune/out/tSNE_P_N.csv'
-out_fig='/Users/rh2740/documents/GBM/Results/I6immune/out/P_N.pdf'
+input_file='/Users/rh2740/documents/GBM/Results/1029/S1is_gcimp/out/For_tSNE.csv'
+output_file='/Users/rh2740/documents/GBM/Results/1029/S1is_gcimp/out/tSNE_P_N.csv'
+out_fig='/Users/rh2740/documents/GBM/Results/1029/S1is_gcimp/out/P_N.pdf'
 start=10
 bins=50
-POS_score='high_score'
+POS_score='POS_score'
 
 library(Rtsne)
 ori_dat = read.table(file=input_file,header=T,sep=',')
@@ -22,8 +22,8 @@ ori_dat = read.table(file=input_file,header=T,sep=',')
 # N = ori_dat[which(ori_dat$Prediction==0),]
 # N = ori_dat[sample(nrow(N), 20000), ]
 # sp_ori_dat = rbind(P, N)
-sp_ori_dat=ori_dat[sample(nrow(ori_dat), 20000), ]
-# sp_ori_dat=ori_dat
+# sp_ori_dat=ori_dat[sample(nrow(ori_dat), 20000), ]
+sp_ori_dat=ori_dat
 X = as.matrix(sp_ori_dat[,start:dim(sp_ori_dat)[2]])
 res = Rtsne(X, initial_dims=100, check_duplicates = FALSE)
 Y=res$Y
@@ -46,7 +46,7 @@ write.table(dat, file=output_file, row.names = F, sep=',')
 library(ggplot2)
 library(gridExtra)
 
-p1=ggplot(data=dat,aes(x=tsne1,y=tsne2,col=high_score))+
+p1=ggplot(data=dat,aes(x=tsne1,y=tsne2,col=POS_score))+
   scale_color_gradient2(high='darkorange',mid='white',low='steelblue',midpoint=0.5)+
   geom_point(alpha=0.2)+
   #theme(legend.position='bottom')+
