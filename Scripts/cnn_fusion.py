@@ -1,7 +1,7 @@
 """
-Convolutional neural nets driving code for TF2.0
+Convolutional neural nets driving code for TF2.0 for fusion
 
-Created on 03/18/2019
+Created on 10/31/2019
 
 @author: RH
 """
@@ -18,10 +18,10 @@ import Accessory as ac
 class INCEPTION:
     # hyper parameters
     DEFAULTS = {
-        "batch_size": 128,
-        "dropout": 0.5,
+        "batch_size": 64,
+        "dropout": 0.3,
         "learning_rate": 1E-3,
-        "classes": 4
+        "classes": 2
     }
 
     RESTORE_KEY = "cnn_to_restore"
@@ -52,7 +52,7 @@ class INCEPTION:
             self.sesh.run(tf.global_variables_initializer())
 
         # unpack handles for tensor ops to feed or fetch for lower layers
-        (self.x_in, self.is_train, self.y_in, self.logits,
+        (self.x_in, self.is_train, self.y_in, self.logits, self.demographic,
          self.net, self.w, self.pred, self.pred_cost, self.global_step, self.train_op, self.merged_summary) = handles
 
         if save_graph_def:  # tensorboard
@@ -80,74 +80,31 @@ class INCEPTION:
         # label input
         y_in = tf.placeholder(dtype=tf.int32, name="y")
 
+        # other features input
+        dm_in = tf.placeholder(dtype=tf.int32, name="demographic")
+
         # train or test
         is_train = tf.placeholder_with_default(True, shape=[], name="is_train")
         classes = self.classes
 
-        if model == 'I1':
-            import InceptionV1
-            logits, nett, ww = InceptionV1.googlenet(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='GoogleNet')
-            print('Using Inception-V1')
-        elif model == 'I2':
-            import InceptionV2
-            logits, nett, ww = InceptionV2.inceptionv2(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='InceptionV2')
-            print('Using Inception-V2')
-        elif model == 'I3':
-            import InceptionV3
-            logits, nett, ww = InceptionV3.inceptionv3(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='InceptionV3')
-            print('Using Inception-V3')
-        elif model == 'I4':
-            import InceptionV4
-            logits, nett, ww = InceptionV4.inceptionv4(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='InceptionV4')
-            print('Using Inception-V4')
-        elif model == 'I5':
-            import InceptionV5
-            logits, nett, ww = InceptionV5.inceptionresnetv1(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='InceptionResV1')
-            print('Using Inception-Resnet-V1')
-        elif model == 'I6':
-            import InceptionV6
-            logits, nett, ww = InceptionV6.inceptionresnetv2(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='InceptionResV2')
-            print('Using Inception-Resnet-V2')
-        elif model == 'S1':
-            import Simple1
-            logits, nett, ww = Simple1.simplev1(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='SimpleV1')
-            print('Using SimpleV1')
+        if model == 'F1':
+            import IncepFusionV1
+            logits, nett, ww = IncepFusionV1.incepfusionv1(x_in_reshape,
+                                                           demographics=dm_in,
+                                                           num_classes=classes,
+                                                           is_training=is_train,
+                                                           dropout_keep_prob=dropout,
+                                                           scope='IncepFusionV1')
+            print('Using IncepFusionV1')
         else:
-            import InceptionV1
-            logits, nett, ww = InceptionV1.googlenet(x_in_reshape,
-                                                   num_classes=classes,
-                                                   is_training=is_train,
-                                                   dropout_keep_prob=dropout,
-                                                   scope='GoogleNet')
-            print('Using Default: Inception-V1')
+            import IncepFusionV1
+            logits, nett, ww = IncepFusionV1.incepfusionv1(x_in_reshape,
+                                                           demographics=dm_in,
+                                                           num_classes=classes,
+                                                           is_training=is_train,
+                                                           dropout_keep_prob=dropout,
+                                                           scope='IncepFusionV1')
+            print('Using Default: IncepFusionV1')
 
         pred = tf.nn.softmax(logits, name="prediction")
 
@@ -186,8 +143,8 @@ class INCEPTION:
                 sessa.run(itr.initializer, feed_dict={ph: file})
                 while True:
                     try:
-                        x, y = sessa.run(next_element)
-                        feed_dict = {self.x_in: x, self.is_train: train_status}
+                        x, y, dm = sessa.run(next_element)
+                        feed_dict = {self.x_in: x, self.demographic: dm, self.is_train: train_status}
                         fetches = [self.pred, self.net, self.w]
                         pred, net, w = self.sesh.run(fetches, feed_dict)
                         # ac.CAM(net, w, pred, x, y, dirr, 'Test', bs, pmd, rd)
@@ -212,8 +169,8 @@ class INCEPTION:
                 sessa.run(itr.initializer, feed_dict={ph: file})
                 while True:
                     try:
-                        x = sessa.run(next_element)
-                        feed_dict = {self.x_in: x, self.is_train: train_status}
+                        x, dm  = sessa.run(next_element)
+                        feed_dict = {self.x_in: x, self.demographic: dm, self.is_train: train_status}
                         fetches = [self.pred, self.net, self.w]
                         pred, net, w = self.sesh.run(fetches, feed_dict)
                         ac.CAM_R(net, w, pred, x, dirr, 'Test', bs, rd)
@@ -229,23 +186,10 @@ class INCEPTION:
         now = datetime.now().isoformat()[11:]
         print("------- Testing end: {} -------\n".format(now), flush=True)
 
-    # get global step
-    def get_global_step(self, X):
-        itr, file, ph = X.data()
-        next_element = itr.get_next()
-        with tf.Session() as sessa:
-            sessa.run(itr.initializer, feed_dict={ph: file})
-            x, y = sessa.run(next_element)
-            feed_dict = {self.x_in: x, self.y_in: y}
-
-            fetches = [self.global_step]
-
-            i = self.sesh.run(fetches, feed_dict)
-
-        return i
 
     # training
-    def train(self, X, VAX, ct, bs, dirr, pmd, max_iter=np.inf, cross_validate=True, verbose=True, save=True, outdir="./out"):
+    def train(self, X, VAX, ct, bs, dirr, pmd, max_iter=np.inf,
+              cross_validate=True, verbose=True, save=True, outdir="./out"):
         start_time = time.time()
         svs = 0
         if save:
@@ -269,9 +213,8 @@ class INCEPTION:
                 valid_cost = 0
                 while True:
                     try:
-                        x, y = sessa.run(next_element)
-
-                        feed_dict = {self.x_in: x, self.y_in: y}
+                        x, y, dm = sessa.run(next_element)
+                        feed_dict = {self.x_in: x, self.demographic: dm}
 
                         fetches = [self.merged_summary, self.logits, self.pred,
                                    self.pred_cost, self.global_step, self.train_op]
@@ -293,8 +236,8 @@ class INCEPTION:
                             if cross_validate:
                                 temp_valid = []
                                 for iii in range(10):
-                                    x, y = sessa.run(vanext_element)
-                                    feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                                    x, y, dm = sessa.run(vanext_element)
+                                    feed_dict = {self.x_in: x, self.demographic: dm, self.is_train: False}
                                     fetches = [self.pred_cost, self.merged_summary]
                                     valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
                                     self.valid_logger.add_summary(valid_summary, i)
@@ -337,8 +280,8 @@ class INCEPTION:
                             if cross_validate:
                                 temp_valid = []
                                 for iii in range(100):
-                                    x, y = sessa.run(vanext_element)
-                                    feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                                    x, y, dm = sessa.run(vanext_element)
+                                    feed_dict = {self.x_in: x, self.demographic: dm, self.is_train: False}
                                     fetches = [self.pred_cost, self.merged_summary]
                                     valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
                                     self.valid_logger.add_summary(valid_summary, i)
@@ -380,8 +323,8 @@ class INCEPTION:
 
                                 now = datetime.now().isoformat()[11:]
                                 print("------- Final Validation begin: {} -------\n".format(now), flush=True)
-                                x, y = sessa.run(vanext_element)
-                                feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                                x, y, dm = sessa.run(vanext_element)
+                                feed_dict = {self.x_in: x, self.demographic: dm, self.is_train: False}
                                 fetches = [self.pred_cost, self.merged_summary]
                                 valid_cost, valid_summary= self.sesh.run(fetches, feed_dict)
 
@@ -409,8 +352,8 @@ class INCEPTION:
 
                             now = datetime.now().isoformat()[11:]
                             print("------- Final Validation begin: {} -------\n".format(now), flush=True)
-                            x, y = sessa.run(vanext_element)
-                            feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                            x, y, dm = sessa.run(vanext_element)
+                            feed_dict = {self.x_in: x, self.demographic: dm, self.is_train: False}
                             fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
                             valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
 
@@ -447,8 +390,8 @@ class INCEPTION:
                     if cross_validate:
                         now = datetime.now().isoformat()[11:]
                         print("------- Validation begin: {} -------\n".format(now), flush=True)
-                        x, y = sessa.run(vanext_element)
-                        feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                        x, y, dm = sessa.run(vanext_element)
+                        feed_dict = {self.x_in: x, self.demographic: dm, self.is_train: False}
                         fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
                         valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
 
@@ -500,5 +443,14 @@ class INCEPTION:
                 print('Not logging', flush=True)
 
             sys.exit(0)
+
+
+
+
+
+
+
+
+
 
 

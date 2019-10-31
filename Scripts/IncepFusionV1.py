@@ -157,9 +157,10 @@ def reduction_resnet_v2_B(input):
     return rbr
 
 
-def inceptionresnetv2(input, dropout_keep_prob=0.8, num_classes=1000, is_training=True, scope='InceptionResnetV2'):
-    '''Creates the Inception_ResNet_v2 network.'''
-    with tf.variable_scope(scope, 'InceptionResnetV2', [input]):
+def incepfusionv1(input, demographics, dropout_keep_prob=0.8, num_classes=1000,
+                  is_training=True, scope='IncepFusionV1'):
+    '''Creates the IncepFusionV1 network.'''
+    with tf.variable_scope(scope, 'IncepFusionV1', [input]):
         # Input shape is 299 * 299 * 3
         x = resnet_v2_stem(input)  # Output: 35 * 35 * 256
 
@@ -211,15 +212,20 @@ def inceptionresnetv2(input, dropout_keep_prob=0.8, num_classes=1000, is_trainin
 
         pool5_drop_10x10_s1 = Dropout(dropout_keep_prob)(x, training=is_training)
 
+        demographics = Dense(5, name='demographic_fc1', activation="relu", kernel_regularizer=l2(0.0002))(demographics)
+
+        merged = concatenate([pool5_drop_10x10_s1, demographics])
+
         loss3_classifier_W = Dense(num_classes, name='loss3/classifier', kernel_regularizer=l2(0.0002))
 
-        loss3_classifier = loss3_classifier_W(pool5_drop_10x10_s1)
+        loss3_classifier = loss3_classifier_W(merged)
 
         w_variables = loss3_classifier_W.get_weights()
+        w_variables = w_variables[0]
 
         logits = tf.cond(tf.equal(is_training, tf.constant(True)),
                          lambda: tf.add(loss3_classifier, tf.scalar_mul(tf.constant(0.3), loss2_classifier)),
                          lambda: loss3_classifier)
 
-        return logits, net, tf.convert_to_tensor(w_variables[0])
+        return logits, net, tf.convert_to_tensor(w_variables[:1792, ])
 
