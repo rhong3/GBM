@@ -26,23 +26,25 @@ def tile_ids_in(inp):
 
 # Get all svs images with its label as one file; level is the tile resolution level
 def big_image_sum(pmd, path='../tiles/', ref_file='../feature_summary.csv'):
-    ref = pd.read_csv(ref_file, sep=',', header=0)
+    ref = pd.read_csv(ref_file, header=0)
     ref = ref.loc[ref['used_in_proteome'] == True]
     ref = ref.rename(columns={pmd: 'label'})
     ref = ref.dropna(subset=['label'])
-    ref['sldnum'] = ref['slide_id'].str.split("-", n=2, expand=True)[-1]
+    ref['sldnum'] = ref['slide_id'].str.split("-", n=2, expand=True)[2]
     ref = ref[['case_id', 'sldnum', 'weight', 'percent_tumor_nuclei', 'percent_total_cellularity', 'percent_necrosis',
                'age', 'label']]
     ref = ref.rename(columns={'case_id': 'slide'})
-    ref1 = ref
-    ref2 = ref
+    ref1 = ref.copy()
+    ref2 = ref.copy()
     ref['level'] = 0
-    ref['path'] = path + "{}/level{}".format(ref['pctnum'], ref['level'])
+    ref['path'] = path + ref['slide'] + "/level" + ref['level'].map(str)
     ref1['level'] = 1
-    ref1['path'] = path + "{}/level{}".format(ref1['pctnum'], ref1['level'])
+    ref1['path'] = path + ref1['slide'] + "/level" + ref1['level'].map(str)
     ref2['level'] = 2
-    ref2['path'] = path + "{}/level{}".format(ref2['pctnum'], ref2['level'])
+    ref2['path'] = path + ref2['slide'] + "/level" + ref2['level'].map(str)
     datapd = pd.concat([ref, ref1, ref2])
+    datapd = datapd.astype({'weight': 'int64', 'percent_tumor_nuclei': 'int64', 'percent_total_cellularity': 'int64',
+                            'percent_necrosis': 'int64', 'age': 'int64', 'level': 'int64', 'label': 'int64'})
 
     return datapd
 
@@ -53,8 +55,9 @@ def set_sep(alll, path, cls, level=None, cut=0.3, batchsize=64):
     trlist = []
     telist = []
     valist = []
+
     if level:
-        alll = alll[alll.level == level]
+        alll = alll[alll['level'] == int(level)]
 
     CPTAC = alll
     for i in range(cls):

@@ -106,6 +106,7 @@ def loader(totlist_dir, ds):
     writer.close()
     sys.stdout.flush()
 
+
 if __name__ == "__main__":
     tf.reset_default_graph()
     # make directories if not exist
