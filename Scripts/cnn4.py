@@ -175,7 +175,7 @@ class INCEPTION:
     # inference using trained models
     def inference(self, X, dirr, testset=None, pmd=None, train_status=False, Not_Realtest=True, bs=None):
         now = datetime.now().isoformat()[11:]
-        print("------- Testing begin: {} -------\n".format(now), flush=True)
+        print("------- Testing begin: {} -------\n".format(now))
         rd = 0
         pdx = []
         yl = []
@@ -227,7 +227,7 @@ class INCEPTION:
                         break
 
         now = datetime.now().isoformat()[11:]
-        print("------- Testing end: {} -------\n".format(now), flush=True)
+        print("------- Testing end: {} -------\n".format(now))
 
     # get global step
     def get_global_step(self, X):
@@ -245,7 +245,7 @@ class INCEPTION:
         return i
 
     # training
-    def train(self, X, VAX, ct, bs, dirr, pmd, max_iter=np.inf, cross_validate=True, verbose=True, save=True, outdir="./out"):
+    def train(self, X, VAX, ct, bs, dirr, pmd, max_iter=np.inf, cross_validate=True, save=True, outdir="./out"):
         start_time = time.time()
         svs = 0
         if save:
@@ -254,7 +254,7 @@ class INCEPTION:
         try:
             err_train = 0
             now = datetime.now().isoformat()[11:]
-            print("------- Training begin: {} -------\n".format(now), flush=True)
+            print("------- Training begin: {} -------\n".format(now))
             itr, file, ph = X.data()
             next_element = itr.get_next()
 
@@ -290,105 +290,91 @@ class INCEPTION:
                             mintrain = 0
 
                         if cost <= mintrain and i > 29999:
-                            if cross_validate:
-                                temp_valid = []
-                                for iii in range(10):
-                                    x, y = sessa.run(vanext_element)
-                                    feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
-                                    fetches = [self.pred_cost, self.merged_summary]
-                                    valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
-                                    self.valid_logger.add_summary(valid_summary, i)
-                                    temp_valid.append(valid_cost)
+                            temp_valid = []
+                            for iii in range(10):
+                                x, y = sessa.run(vanext_element)
+                                feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                                fetches = [self.pred_cost, self.merged_summary]
+                                valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
+                                self.valid_logger.add_summary(valid_summary, i)
+                                temp_valid.append(valid_cost)
 
-                                tempminvalid = np.mean(temp_valid)
-                                try:
-                                    minvalid = min(validation_cost)
-                                except ValueError:
-                                    minvalid = 0
+                            tempminvalid = np.mean(temp_valid)
+                            try:
+                                minvalid = min(validation_cost)
+                            except ValueError:
+                                minvalid = 0
 
-                                if tempminvalid <= minvalid:
-                                    train_cost.append(cost)
-                                    print("round {} --> loss: ".format(i), cost, flush=True)
-                                    print("round {} --> validation loss: ".format(i), tempminvalid, flush=True)
-                                    print("New Min loss model found!")
-                                    validation_cost.append(tempminvalid)
-                                    if save:
-                                        outfile = os.path.join(os.path.abspath(outdir),
-                                                               "{}_{}".format(self.model,
-                                                                              "_".join(['dropout', str(self.dropout)])))
-                                        saver.save(self.sesh, outfile, global_step=None)
-                                        svs = i
-
-                            else:
+                            if tempminvalid <= minvalid:
                                 train_cost.append(cost)
-                                print("round {} --> loss: ".format(i), cost, flush=True)
+                                print("round {} --> loss: ".format(i), cost)
+                                print("round {} --> validation loss: ".format(i), tempminvalid)
                                 print("New Min loss model found!")
+                                validation_cost.append(tempminvalid)
                                 if save:
                                     outfile = os.path.join(os.path.abspath(outdir),
                                                            "{}_{}".format(self.model,
                                                                           "_".join(['dropout', str(self.dropout)])))
                                     saver.save(self.sesh, outfile, global_step=None)
                                     svs = i
+
                         else:
                             train_cost.append(cost)
 
-                        if i % 1000 == 0 and verbose:
-                            print("round {} --> loss: ".format(i), cost, flush=True)
-                            if cross_validate:
-                                temp_valid = []
-                                for iii in range(100):
-                                    x, y = sessa.run(vanext_element)
-                                    feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
-                                    fetches = [self.pred_cost, self.merged_summary]
-                                    valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
-                                    self.valid_logger.add_summary(valid_summary, i)
-                                    temp_valid.append(valid_cost)
-                                tempminvalid = np.mean(temp_valid)
-                                try:
-                                    minvalid = min(validation_cost)
-                                except ValueError:
-                                    minvalid = 0
-                                validation_cost.append(tempminvalid)
-                                print("round {} --> Step Average validation loss: ".format(i), tempminvalid, flush=True)
-
-                                if save and tempminvalid <= minvalid:
-                                    print("New Min loss model found!")
-                                    print("round {} --> loss: ".format(i), cost, flush=True)
-                                    outfile = os.path.join(os.path.abspath(outdir),
-                                                           "{}_{}".format(self.model,
-                                                                          "_".join(['dropout', str(self.dropout)])))
-                                    saver.save(self.sesh, outfile, global_step=None)
-                                    svs = i
-
-                                if i > 99999:
-                                    valid_mean_cost = np.mean(validation_cost[-10:-1])
-                                    print('Mean validation loss: {}'.format(valid_mean_cost))
-                                    if valid_cost > valid_mean_cost:
-                                        print("Early stopped! No improvement for at least 10000 iterations")
-                                        break
-                                    else:
-                                        print("Passed early stopping evaluation. Continue training!")
-
-                        if i >= max_iter-2 and verbose:
-
-                            if cross_validate:
-                                print("final avg loss (@ step {} = epoch {}): {}".format(
-                                    i + 1, np.around(i / ct * bs), err_train / i), flush=True)
-
-                                now = datetime.now().isoformat()[11:]
-                                print("------- Training end: {} -------\n".format(now), flush=True)
-
-                                now = datetime.now().isoformat()[11:]
-                                print("------- Final Validation begin: {} -------\n".format(now), flush=True)
+                        if i % 1000 == 0:
+                            print("round {} --> loss: ".format(i), cost)
+                            temp_valid = []
+                            for iii in range(100):
                                 x, y = sessa.run(vanext_element)
                                 feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
                                 fetches = [self.pred_cost, self.merged_summary]
-                                valid_cost, valid_summary= self.sesh.run(fetches, feed_dict)
-
+                                valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
                                 self.valid_logger.add_summary(valid_summary, i)
-                                print("round {} --> Final Last validation loss: ".format(i), valid_cost, flush=True)
-                                now = datetime.now().isoformat()[11:]
-                                print("------- Final Validation end: {} -------\n".format(now), flush=True)
+                                temp_valid.append(valid_cost)
+                            tempminvalid = np.mean(temp_valid)
+                            try:
+                                minvalid = min(validation_cost)
+                            except ValueError:
+                                minvalid = 0
+                            validation_cost.append(tempminvalid)
+                            print("round {} --> Step Average validation loss: ".format(i), tempminvalid)
+
+                            if save and tempminvalid <= minvalid:
+                                print("New Min loss model found!")
+                                print("round {} --> loss: ".format(i), cost)
+                                outfile = os.path.join(os.path.abspath(outdir),
+                                                       "{}_{}".format(self.model,
+                                                                      "_".join(['dropout', str(self.dropout)])))
+                                saver.save(self.sesh, outfile, global_step=None)
+                                svs = i
+
+                            if i > 99999:
+                                valid_mean_cost = np.mean(validation_cost[-10:-1])
+                                print('Mean validation loss: {}'.format(valid_mean_cost))
+                                if valid_cost > valid_mean_cost:
+                                    print("Early stopped! No improvement for at least 10000 iterations")
+                                    break
+                                else:
+                                    print("Passed early stopping evaluation. Continue training!")
+
+                        if i >= max_iter-2:
+                            print("final avg loss (@ step {} = epoch {}): {}".format(
+                                i + 1, np.around(i / ct * bs), err_train / i))
+
+                            now = datetime.now().isoformat()[11:]
+                            print("------- Training end: {} -------\n".format(now))
+
+                            now = datetime.now().isoformat()[11:]
+                            print("------- Final Validation begin: {} -------\n".format(now))
+                            x, y = sessa.run(vanext_element)
+                            feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                            fetches = [self.pred_cost, self.merged_summary]
+                            valid_cost, valid_summary= self.sesh.run(fetches, feed_dict)
+
+                            self.valid_logger.add_summary(valid_summary, i)
+                            print("round {} --> Final Last validation loss: ".format(i), valid_cost)
+                            now = datetime.now().isoformat()[11:]
+                            print("------- Final Validation end: {} -------\n".format(now))
                             try:
                                 self.train_logger.flush()
                                 self.train_logger.close()
@@ -396,30 +382,29 @@ class INCEPTION:
                                 self.valid_logger.close()
 
                             except AttributeError:  # not logging
-                                print('Not logging', flush=True)
+                                print('Not logging')
                             break
 
                     except tf.errors.OutOfRangeError:
-                        if cross_validate:
-                            print("final avg loss (@ step {} = epoch {}): {}".format(
-                                i + 1, np.around(i / ct * bs), err_train / i), flush=True)
+                        print("final avg loss (@ step {} = epoch {}): {}".format(
+                            i + 1, np.around(i / ct * bs), err_train / i))
 
-                            now = datetime.now().isoformat()[11:]
-                            print("------- Training end: {} -------\n".format(now), flush=True)
+                        now = datetime.now().isoformat()[11:]
+                        print("------- Training end: {} -------\n".format(now))
 
-                            now = datetime.now().isoformat()[11:]
-                            print("------- Final Validation begin: {} -------\n".format(now), flush=True)
-                            x, y = sessa.run(vanext_element)
-                            feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
-                            fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
-                            valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
+                        now = datetime.now().isoformat()[11:]
+                        print("------- Final Validation begin: {} -------\n".format(now))
+                        x, y = sessa.run(vanext_element)
+                        feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                        fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
+                        valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
 
-                            self.valid_logger.add_summary(valid_summary, i)
-                            print("round {} --> Final Last validation loss: ".format(i), valid_cost, flush=True)
-                            ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
-                            ac.metrics(pred, y, dirr, 'Validation', pmd)
-                            now = datetime.now().isoformat()[11:]
-                            print("------- Final Validation end: {} -------\n".format(now), flush=True)
+                        self.valid_logger.add_summary(valid_summary, i)
+                        print("round {} --> Final Last validation loss: ".format(i), valid_cost)
+                        ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
+                        ac.metrics(pred, y, dirr, 'Validation', pmd)
+                        now = datetime.now().isoformat()[11:]
+                        print("------- Final Validation end: {} -------\n".format(now))
 
                         try:
                             self.train_logger.flush()
@@ -428,36 +413,35 @@ class INCEPTION:
                             self.valid_logger.close()
 
                         except AttributeError:  # not logging
-                            print('Not logging', flush=True)
+                            print('Not logging')
 
                         break
                 try:
                     print("final avg loss (@ step {} = epoch {}): {}".format(
-                        i + 1, np.around(i / ct * bs), err_train / i), flush=True)
+                        i + 1, np.around(i / ct * bs), err_train / i))
 
                     now = datetime.now().isoformat()[11:]
-                    print("------- Training end: {} -------\n".format(now), flush=True)
+                    print("------- Training end: {} -------\n".format(now))
 
-                    if svs < 15000 and save:
+                    if svs < 30000 and save:
                             print("Save the last model as the best model.")
                             outfile = os.path.join(os.path.abspath(outdir),
                                                    "{}_{}".format(self.model, "_".join(['dropout', str(self.dropout)])))
                             saver.save(self.sesh, outfile, global_step=None)
 
-                    if cross_validate:
-                        now = datetime.now().isoformat()[11:]
-                        print("------- Validation begin: {} -------\n".format(now), flush=True)
-                        x, y = sessa.run(vanext_element)
-                        feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
-                        fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
-                        valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
+                    now = datetime.now().isoformat()[11:]
+                    print("------- Validation begin: {} -------\n".format(now))
+                    x, y = sessa.run(vanext_element)
+                    feed_dict = {self.x_in: x, self.y_in: y, self.is_train: False}
+                    fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
+                    valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
 
-                        self.valid_logger.add_summary(valid_summary, i)
-                        print("round {} --> Last validation loss: ".format(i), valid_cost, flush=True)
-                        ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
-                        ac.metrics(pred, y, dirr, 'Validation', pmd)
-                        now = datetime.now().isoformat()[11:]
-                        print("------- Validation end: {} -------\n".format(now), flush=True)
+                    self.valid_logger.add_summary(valid_summary, i)
+                    print("round {} --> Last validation loss: ".format(i), valid_cost)
+                    ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
+                    ac.metrics(pred, y, dirr, 'Validation', pmd)
+                    now = datetime.now().isoformat()[11:]
+                    print("------- Validation end: {} -------\n".format(now))
 
                     try:
                         self.train_logger.flush()
@@ -466,14 +450,14 @@ class INCEPTION:
                         self.valid_logger.close()
 
                     except AttributeError:  # not logging
-                        print('Not logging', flush=True)
+                        print('Not logging')
 
                 except tf.errors.OutOfRangeError:
                     print("final avg loss (@ step {} = epoch {}): {}".format(
-                        i + 1, np.around(i / ct * bs), err_train / i), flush=True)
+                        i + 1, np.around(i / ct * bs), err_train / i))
 
                     now = datetime.now().isoformat()[11:]
-                    print("------- Training end: {} -------\n".format(now), flush=True)
+                    print("------- Training end: {} -------\n".format(now))
                     print('No more validation needed!')
 
             print("--- %s seconds ---" % (time.time() - start_time))
@@ -481,10 +465,10 @@ class INCEPTION:
         except KeyboardInterrupt:
 
             print("final avg loss (@ step {} = epoch {}): {}".format(
-                i, np.around(i / ct * bs), err_train / i), flush=True)
+                i, np.around(i / ct * bs), err_train / i))
 
             now = datetime.now().isoformat()[11:]
-            print("------- Training end: {} -------\n".format(now), flush=True)
+            print("------- Training end: {} -------\n".format(now))
 
             if save:
                 outfile = os.path.join(os.path.abspath(outdir),
@@ -497,7 +481,7 @@ class INCEPTION:
                 self.valid_logger.close()
 
             except AttributeError:  # not logging
-                print('Not logging', flush=True)
+                print('Not logging')
 
             sys.exit(0)
 
