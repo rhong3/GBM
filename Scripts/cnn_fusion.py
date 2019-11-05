@@ -96,6 +96,15 @@ class INCEPTION:
                                                            dropout_keep_prob=dropout,
                                                            scope='IncepFusionV1')
             print('Using IncepFusionV1')
+        elif model == 'FS1':
+            import SimpleFusionV1
+            logits, nett, ww = SimpleFusionV1.simplefusionv1(x_in_reshape,
+                                                           demographics=dm_in,
+                                                           num_classes=classes,
+                                                           is_training=is_train,
+                                                           dropout_keep_prob=dropout,
+                                                           scope='SimpleFusionV1')
+            print('Using SimpleFusionV1')
         else:
             import IncepFusionV1
             logits, nett, ww = IncepFusionV1.incepfusionv1(x_in_reshape,
