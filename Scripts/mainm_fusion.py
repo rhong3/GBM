@@ -117,8 +117,6 @@ def loader(totlist_dir, ds):
     filename = data_dir + '/' + ds + '.tfrecords'
     writer = tf.python_io.TFRecordWriter(filename)
     for i in range(len(imlist)):
-        if not i % 1000:
-            sys.stdout.flush()
         try:
             # Load the image
             img = load_image(imlist[i])
@@ -146,7 +144,6 @@ def loader(totlist_dir, ds):
             pass
 
     writer.close()
-    sys.stdout.flush()
 
 
 # load tfrecords and prepare datasets
