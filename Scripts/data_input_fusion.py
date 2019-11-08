@@ -47,7 +47,7 @@ class DataSet(object):
         cellularity = tf.cast(features[self._mode + '/cellularity'], tf.int32)
         necrosis = tf.cast(features[self._mode + '/necrosis'], tf.int32)
         age = tf.cast(features[self._mode + '/age'], tf.int32)
-        demographic = tf.concat([weight, nuclei, cellularity, necrosis, age])
+        demographic = tf.concat([weight, nuclei, cellularity, necrosis, age], -1)
 
         return image, label, demographic
 
@@ -71,7 +71,7 @@ class DataSet(object):
         cellularity = tf.cast(features[self._mode + '/cellularity'], tf.int32)
         necrosis = tf.cast(features[self._mode + '/necrosis'], tf.int32)
         age = tf.cast(features[self._mode + '/age'], tf.int32)
-        demographic = tf.concat([weight, nuclei, cellularity, necrosis, age])
+        demographic = tf.concat([weight, nuclei, cellularity, necrosis, age], -1)
 
         return image, demographic
 
