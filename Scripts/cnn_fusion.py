@@ -223,7 +223,7 @@ class INCEPTION:
                 while True:
                     try:
                         x, y, dm = sessa.run(next_element)
-                        feed_dict = {self.x_in: x, self.dm_in: dm}
+                        feed_dict = {self.x_in: x, self.dm_in: dm, self.y_in: y}
 
                         fetches = [self.merged_summary, self.logits, self.pred,
                                    self.pred_cost, self.global_step, self.train_op]
@@ -245,7 +245,7 @@ class INCEPTION:
                             temp_valid = []
                             for iii in range(100):
                                 x, y, dm = sessa.run(vanext_element)
-                                feed_dict = {self.x_in: x, self.dm_in: dm, self.is_train: False}
+                                feed_dict = {self.x_in: x, self.dm_in: dm,  self.y_in: y, self.is_train: False}
                                 fetches = [self.pred_cost, self.merged_summary]
                                 valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
                                 self.valid_logger.add_summary(valid_summary, i)
@@ -278,7 +278,7 @@ class INCEPTION:
                             temp_valid = []
                             for iii in range(100):
                                 x, y, dm = sessa.run(vanext_element)
-                                feed_dict = {self.x_in: x, self.dm_in: dm, self.is_train: False}
+                                feed_dict = {self.x_in: x, self.dm_in: dm,  self.y_in: y, self.is_train: False}
                                 fetches = [self.pred_cost, self.merged_summary]
                                 valid_cost, valid_summary = self.sesh.run(fetches, feed_dict)
                                 self.valid_logger.add_summary(valid_summary, i)
@@ -319,7 +319,7 @@ class INCEPTION:
                             now = datetime.now().isoformat()[11:]
                             print("------- Final Validation begin: {} -------\n".format(now))
                             x, y, dm = sessa.run(vanext_element)
-                            feed_dict = {self.x_in: x, self.dm_in: dm, self.is_train: False}
+                            feed_dict = {self.x_in: x, self.dm_in: dm, self.y_in: y, self.is_train: False}
                             fetches = [self.pred_cost, self.merged_summary]
                             valid_cost, valid_summary= self.sesh.run(fetches, feed_dict)
 
@@ -347,7 +347,7 @@ class INCEPTION:
                         now = datetime.now().isoformat()[11:]
                         print("------- Final Validation begin: {} -------\n".format(now))
                         x, y, dm = sessa.run(vanext_element)
-                        feed_dict = {self.x_in: x, self.dm_in: dm, self.is_train: False}
+                        feed_dict = {self.x_in: x, self.dm_in: dm, self.y_in: y, self.is_train: False}
                         fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
                         valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
 
@@ -384,7 +384,7 @@ class INCEPTION:
                     now = datetime.now().isoformat()[11:]
                     print("------- Validation begin: {} -------\n".format(now))
                     x, y, dm = sessa.run(vanext_element)
-                    feed_dict = {self.x_in: x, self.dm_in: dm, self.is_train: False}
+                    feed_dict = {self.x_in: x, self.dm_in: dm, self.y_in: y, self.is_train: False}
                     fetches = [self.pred_cost, self.merged_summary, self.pred, self.net, self.w]
                     valid_cost, valid_summary, pred, net, w = self.sesh.run(fetches, feed_dict)
 
