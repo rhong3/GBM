@@ -52,7 +52,7 @@ class INCEPTION:
             self.sesh.run(tf.global_variables_initializer())
 
         # unpack handles for tensor ops to feed or fetch for lower layers
-        (self.x_in, self.is_train, self.y_in, self.logits, self.demographic,
+        (self.x_in, self.is_train, self.y_in, self.logits, self.dm_in,
          self.net, self.w, self.pred, self.pred_cost, self.global_step, self.train_op, self.merged_summary) = handles
 
         if save_graph_def:  # tensorboard
@@ -136,7 +136,7 @@ class INCEPTION:
         merged_summary = tf.summary.merge_all()
 
         return (x_in, is_train,
-                y_in, logits, nett, ww, pred, pred_cost,
+                y_in, logits, dm_in, nett, ww, pred, pred_cost,
                 global_step, train_op, merged_summary)
 
     # inference using trained models
