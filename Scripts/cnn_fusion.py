@@ -82,6 +82,7 @@ class INCEPTION:
 
         # other features input
         dm_in = tf.placeholder(dtype=tf.int32, name="demographic")
+        dm_in_reshape = tf.reshape(dm_in, [-1, 5])
 
         # train or test
         is_train = tf.placeholder_with_default(True, shape=[], name="is_train")
@@ -90,7 +91,7 @@ class INCEPTION:
         if model == 'F1':
             import IncepFusionV1
             logits, nett, ww = IncepFusionV1.incepfusionv1(x_in_reshape,
-                                                           demographics=dm_in,
+                                                           demographics=dm_in_reshape,
                                                            num_classes=classes,
                                                            is_training=is_train,
                                                            dropout_keep_prob=dropout,
@@ -99,7 +100,7 @@ class INCEPTION:
         elif model == 'FS1':
             import SimpleFusionV1
             logits, nett, ww = SimpleFusionV1.simplefusionv1(x_in_reshape,
-                                                           demographics=dm_in,
+                                                           demographics=dm_in_reshape,
                                                            num_classes=classes,
                                                            is_training=is_train,
                                                            dropout_keep_prob=dropout,
@@ -108,7 +109,7 @@ class INCEPTION:
         else:
             import IncepFusionV1
             logits, nett, ww = IncepFusionV1.incepfusionv1(x_in_reshape,
-                                                           demographics=dm_in,
+                                                           demographics=dm_in_reshape,
                                                            num_classes=classes,
                                                            is_training=is_train,
                                                            dropout_keep_prob=dropout,
