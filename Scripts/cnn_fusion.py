@@ -81,7 +81,7 @@ class INCEPTION:
         y_in = tf.placeholder(dtype=tf.int32, name="y")
 
         # other features input
-        dm_in = tf.placeholder(dtype=tf.int32, name="demographic")
+        dm_in = tf.placeholder(dtype=tf.float32, name="demographic")
         dm_in_reshape = tf.reshape(dm_in, [-1, 5])
 
         # train or test
