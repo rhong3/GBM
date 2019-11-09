@@ -359,7 +359,7 @@ def py_map2jpg(imgmap):
 # generating CAM plots of each tile; net is activation; w is weight; pred is prediction scores; x are input images;
 # y are labels; path is output folder, name is test/validation; rd is current batch number
 def CAM(net, w, pred, x, y, path, name, bs, pmd, rd=0):
-    w = w[:int(np.shape(net)[-1]), ]
+    w = w[:int(np.shape(net)[-1]), :]
     if pmd == 'telomere':
         DIRA = "../Results/{}/out/{}_short_img".format(path, name)
         DIRB = "../Results/{}/out/{}_normal_img".format(path, name)

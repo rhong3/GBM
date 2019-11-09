@@ -70,8 +70,8 @@ def simplev1(input, dropout_keep_prob=0.8, num_classes=1000, is_training=True, s
 
     loss3_classifier = loss3_classifier_W(pool5_drop_10x10_s1)
 
-    w_variables = loss3_classifier_W.get_weights()
+    w_variables = loss3_classifier_W.get_weights()[0]
 
     logits = loss3_classifier
 
-    return logits, net, tf.convert_to_tensor(w_variables[0])
+    return logits, net, tf.convert_to_tensor(w_variables)

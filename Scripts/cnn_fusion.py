@@ -353,7 +353,7 @@ class INCEPTION:
 
                         self.valid_logger.add_summary(valid_summary, i)
                         print("round {} --> Final Last validation loss: ".format(i), valid_cost)
-                        ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
+                        # ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
                         ac.metrics(pred, y, dirr, 'Validation', pmd)
                         now = datetime.now().isoformat()[11:]
                         print("------- Final Validation end: {} -------\n".format(now), flush=True)
@@ -390,7 +390,7 @@ class INCEPTION:
 
                     self.valid_logger.add_summary(valid_summary, i)
                     print("round {} --> Last validation loss: ".format(i), valid_cost)
-                    ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
+                    # ac.CAM(net, w, pred, x, y, dirr, 'Validation', bs, pmd)
                     ac.metrics(pred, y, dirr, 'Validation', pmd)
                     now = datetime.now().isoformat()[11:]
                     print("------- Validation end: {} -------\n".format(now), flush=True)

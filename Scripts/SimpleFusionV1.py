@@ -79,4 +79,4 @@ def simplefusionv1(input, demographics, dropout_keep_prob=0.8, num_classes=1000,
 
     logits = loss3_classifier
 
-    return logits, net, tf.convert_to_tensor(w_variables[0])
+    return logits, net, tf.convert_to_tensor(w_variables)
