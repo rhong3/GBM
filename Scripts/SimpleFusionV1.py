@@ -75,7 +75,7 @@ def simplefusionv1(input, demographics, dropout_keep_prob=0.8, num_classes=1000,
 
     loss3_classifier = loss3_classifier_W(merged)
 
-    w_variables = loss3_classifier_W.get_weights()
+    w_variables = loss3_classifier_W.get_weights()[0]
 
     logits = loss3_classifier
 

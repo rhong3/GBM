@@ -339,7 +339,7 @@ def py_returnCAMmap(activation, weights_LR):
 
     for t in range(n_top):
         weights_vec = np.reshape(weights_LR[t], [1, weights_LR[t].shape[0]])
-        heatmap_vec = np.dot(weights_vec,act_vec)
+        heatmap_vec = np.dot(weights_vec, act_vec)
         heatmap = np.reshape(np.squeeze(heatmap_vec), [w, h])
         out[:, :, t] = heatmap
     return out
@@ -359,6 +359,7 @@ def py_map2jpg(imgmap):
 # generating CAM plots of each tile; net is activation; w is weight; pred is prediction scores; x are input images;
 # y are labels; path is output folder, name is test/validation; rd is current batch number
 def CAM(net, w, pred, x, y, path, name, bs, pmd, rd=0):
+    w = w[:int(np.shape(net)[-1]), ]
     if pmd == 'telomere':
         DIRA = "../Results/{}/out/{}_short_img".format(path, name)
         DIRB = "../Results/{}/out/{}_normal_img".format(path, name)
@@ -446,6 +447,7 @@ def CAM(net, w, pred, x, y, path, name, bs, pmd, rd=0):
 
 # CAM for real test; no need to determine correct or wrong
 def CAM_R(net, w, pred, x, path, name, bs, rd=0):
+    w = w[:int(np.shape(net)[-1]), ]
     DIRR = "../Results/{}/out/{}_img".format(path, name)
     rd = rd * bs
 

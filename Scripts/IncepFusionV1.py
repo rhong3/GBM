@@ -220,12 +220,11 @@ def incepfusionv1(input, demographics, dropout_keep_prob=0.8, num_classes=1000,
 
         loss3_classifier = loss3_classifier_W(merged)
 
-        w_variables = loss3_classifier_W.get_weights()
-        w_variables = w_variables[0]
+        w_variables = loss3_classifier_W.get_weights()[0]
 
         logits = tf.cond(tf.equal(is_training, tf.constant(True)),
                          lambda: tf.add(loss3_classifier, tf.scalar_mul(tf.constant(0.3), loss2_classifier)),
                          lambda: loss3_classifier)
 
-        return logits, net, tf.convert_to_tensor(w_variables[:1792, ])
+        return logits, net, tf.convert_to_tensor(w_variables)
 
