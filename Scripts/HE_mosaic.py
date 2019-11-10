@@ -26,19 +26,22 @@ def sample(dat, md, bins):
     if md == 'telomere':
         classes = 3
         redict = {0: 'normal_score', 1: 'short_score', 2: 'long_score'}
+        cutoff = 0.35
     elif md == 'immune':
         redict = {0: 'low_score', 1: 'high_score'}
         classes = 2
+        cutoff = 0.6
     else:
         redict = {0: 'NEG_score', 1: 'POS_score'}
         classes = 2
+        cutoff = 0.6
     sampledls = []
     for m in range(classes):
         for i in range(bins):
             for j in range(bins):
                 try:
                     sub = dat.loc[(dat['x_int'] == i) & (dat['y_int'] == j)
-                                    & (dat[redict[m]] > 0.51) & (dat['True_label'] == m)]
+                                    & (dat[redict[m]] > cutoff) & (dat['True_label'] == m)]
                     picked = sub.sample(1, replace=False)
                     for idx, row in picked.iterrows():
                         sampledls.append([row['path'], row['x_int'], row['y_int']])
