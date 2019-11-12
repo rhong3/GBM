@@ -1,14 +1,14 @@
 ## reduce dimensionality of the acitvation layer of model
 ## visualize the manifold
 
-# telomere 15, others 14
-input_file='/Users/rh2740/documents/GBM/Results/1109/FS1telomere2/out/For_tSNE.csv'
-output_file='/Users/rh2740/documents/GBM/Results/1109/FS1telomere2/out/tSNE_P_N.csv'
-out_fig='/Users/rh2740/documents/GBM/Results/1109/FS1telomere2/out/P_N.pdf'
-start=15
+
+input_file='/Users/rh2740/documents/GBM/Results/1109/F1immune2/out/For_tSNE.csv'
+output_file='/Users/rh2740/documents/GBM/Results/1109/F1immune2/out/tSNE_P_N.csv'
+out_fig='/Users/rh2740/documents/GBM/Results/1109/F1immune2/out/P_N.pdf'
+start=14   # telomere 15, others 14
 bins=50
-repeats=3
-POS_score=c('short_score', 'normal_score', 'long_score')
+MDP = 0.5 # 0.5 for binary; 1/length(POS_score))
+POS_score=c('high_score')
 
 library(Rtsne)
 ori_dat = read.table(file=input_file,header=T,sep=',')
@@ -43,14 +43,14 @@ palist <- list()
 pblist <- list()
 for(i in 1:length(POS_score)){
   palist[[i]]=ggplot(data=dat,aes_string(x='tsne1',y='tsne2',col=POS_score[i]))+
-    scale_color_gradient2(high='darkorange',mid='white',low='steelblue',midpoint=1/length(POS_score))+
-    geom_point(alpha=0.6)+
+    scale_color_gradient2(high='darkorange',mid='white',low='steelblue',midpoint=MDP)+
+    geom_point(alpha=0.2)+
     #theme(legend.position='bottom')+
     xlim(-60,60)+
     ylim(-60,60)
   
   pblist[[i]]=ggplot(data=dat,aes_string(x='tsne1',y='tsne2'))+
-    geom_point(aes(col=True_label),alpha=0.6)+
+    geom_point(aes(col=True_label),alpha=0.2)+
     scale_color_manual(values = c("#999999", "#E69F00", "#56B4E9", "#009E73",
                                   "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))+
     #theme(legend.position='bottom')+
