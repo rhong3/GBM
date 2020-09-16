@@ -107,6 +107,18 @@ tile = read.csv('/Users/rh2740/documents/GBM/Results/4cat/tile.csv')
 
 slide.trunc = slide[slide$immune != 3,]
 tile.trunc = tile[tile$immune != 3,]
+
+
+slide.b = slide[slide$immune != 3 & slide$immune != 2,]
+tile.b = tile[tile$immune != 3 & tile$immune != 2,]
+slide_roc.b = roc(factor(slide.b$True_label), slide.b$high_score, levels=c('high', 'low'))
+tile_roc.b = roc(factor(tile.b$True_label), tile.b$high_score, levels=c('high', 'low'))
+slide_PRAUC.b = PRAUC(slide.b$high_score, factor(slide.b$True_label))
+tile_PRAUC.b = PRAUC(tile.b$high_score, factor(tile.b$True_label))
+
+
+
+
 library(pROC)
 library(MLmetrics)
 slide_roc.1 = roc(factor(slide$stratify1), slide$high_score, levels=c('high', 'low'))
