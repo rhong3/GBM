@@ -117,18 +117,18 @@ slide_roc.old = roc(factor(slide$True_label), slide$high_score, levels=c('high',
 tile_roc.old = roc(factor(tile$True_label), tile$high_score, levels=c('high', 'low'))
 
 slide_PRAUC.1 = PRAUC(slide$high_score, factor(slide$stratify1))
-slide_PRAUC.1 = PRAUC(slide$high_score, factor(slide$stratify1))
+slide_PRAUC.1_t = PRAUC(slide.trunc$high_score, factor(slide.trunc$stratify1))
 tile_PRAUC.1 = PRAUC(tile$high_score, factor(tile$stratify1))
-slide_PRAUC.1 = PRAUC(slide$high_score, factor(slide$stratify1))
+tile_PRAUC.1_t = PRAUC(tile.trunc$high_score, factor(tile.trunc$stratify1))
 slide_PRAUC.old = PRAUC(slide$high_score, factor(slide$True_label))
 tile_PRAUC.old = PRAUC(tile$high_score, factor(tile$True_label))
 
 # New plots
 input_file=read.csv('/Users/rh2740/documents/GBM/Results/1109/FS1immune0/out/tSNE_Figure.csv')
-ref = read.csv('/Users/rh2740/documents/GBM/Results/4cat/GBM_immune_subtype_score.txt', sep='\t')
+ref = read.csv('/Users/rh2740/documents/GBM/Results/4cat/gbm_all_subtype_collections.v5.1.tsv', sep='\t')
 colnames(ref) = gsub('case', 'slide', colnames(ref))
 
-tsne = merge(input_file, ref[,1:2])
+tsne = merge(input_file, ref[,c(1, 15)])
 
 slide = read.csv('/Users/rh2740/documents/GBM/Results/4cat/slide.csv')
 tsne = merge(tsne, slide$stratify1)
